@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+    # binaries
+    "day_01",
+
+    # libraries
+    "general",
+]
