@@ -34,3 +34,24 @@ pub fn read_int_lines(filename: Option<PathBuf>) -> Result<Vec<i32>, Box<dyn std
         }
     }
 }
+
+// Read the lines of a filename into a Vec<String>
+// A filename of "-" or None is treated as stdin
+pub fn read_string_lines(filename: Option<PathBuf>) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut lines = vec![];
+    match filename {
+        Some(file) if file.as_os_str() != "-" => {
+            for line in read_lines(file)? {
+                lines.push(line?.trim().to_string());
+            }
+            Ok(lines)
+        }
+        _ => {
+            // STDIN
+            for line in io::BufReader::new(io::stdin()).lines() {
+                lines.push(line?.trim().to_string());
+            }
+            Ok(lines)
+        }
+    }
+}

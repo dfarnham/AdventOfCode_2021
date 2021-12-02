@@ -3,6 +3,7 @@
 members = [
     # binaries
     "day_01",
+    "day_02",
 
     # libraries
     "general",
