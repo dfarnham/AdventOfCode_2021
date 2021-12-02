@@ -12,13 +12,9 @@ fn increase_window_count(array: &[i32], window: usize) -> usize {
         window
     );
     (0..(array.len() - window))
-        .filter(|i| {
-            array[*i..(*i + window)].iter().sum::<i32>()
-                < array[(*i + 1)..(*i + 1 + window)].iter().sum::<i32>()
-        })
+        .filter(|i| array[*i..(*i + window)].iter().sum::<i32>() < array[(*i + 1)..=(*i + window)].iter().sum::<i32>())
         .count()
 }
-
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
@@ -45,7 +41,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-
 #[test]
 #[should_panic]
 fn empty_array() {
@@ -71,10 +66,32 @@ fn invalid_window() {
 fn part1_example() {
     let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
     assert_eq!(increase_window_count(&measurements, 1), 7);
+
+    let file = Some(std::path::PathBuf::from("input-example"));
+    let measurements = read_int_lines(file).unwrap();
+    assert_eq!(increase_window_count(&measurements, 1), 7);
 }
 
 #[test]
 fn part2_example() {
     let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
     assert_eq!(increase_window_count(&measurements, 3), 5);
+
+    let file = Some(std::path::PathBuf::from("input-example"));
+    let measurements = read_int_lines(file).unwrap();
+    assert_eq!(increase_window_count(&measurements, 3), 5);
+}
+
+#[test]
+fn part1_actual() {
+    let file = Some(std::path::PathBuf::from("input-actual"));
+    let measurements = read_int_lines(file).unwrap();
+    assert_eq!(increase_window_count(&measurements, 1), 1233);
+}
+
+#[test]
+fn part2_actual() {
+    let file = Some(std::path::PathBuf::from("input-actual"));
+    let measurements = read_int_lines(file).unwrap();
+    assert_eq!(increase_window_count(&measurements, 3), 1275);
 }
