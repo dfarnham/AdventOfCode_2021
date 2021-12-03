@@ -7,10 +7,11 @@ use structopt::StructOpt;
 
 // Given an input file containing key/value pairs separated by whitespace
 // Return a map of summed values for each key and a "depth" calculation
-fn get_move_totals(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<dyn std::error::Error>> {
-    let mut moves: HashMap<String, i32> = HashMap::new();
+fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<dyn std::error::Error>> {
+    let mut move_data: HashMap<String, i32> = HashMap::new();
     let mut aim = 0;
     let mut depth = 0;
+
     for line in read_string_lines(filename)? {
         let fields = line.split_whitespace().collect::<Vec<&str>>();
         assert!(
@@ -20,20 +21,19 @@ fn get_move_totals(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Bo
             fields
         );
 
-        let units = moves.entry(fields[0].into()).or_insert(0);
-        *units += fields[1].parse::<i32>()?;
+        let units = move_data.entry(fields[0].into()).or_insert(0);
+        let value = fields[1].parse::<i32>()?;
+        *units += value;
 
         match fields[0] {
-            "forward" => {
-                depth += aim * fields[1].parse::<i32>()?;
-            }
-            "down" => aim += fields[1].parse::<i32>()?,
-            "up" => aim -= fields[1].parse::<i32>()?,
+            "forward" => depth += aim * value,
+            "down" => aim += value,
+            "up" => aim -= value,
             _ => panic!("{}", format!("Unknown command {}", fields[0])),
         }
     }
-    moves.insert("depth".into(), depth);
-    Ok(moves)
+    move_data.insert("depth".into(), depth);
+    Ok(move_data)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,11 +55,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // ==============================================================
 
-    let moves = get_move_totals(args.input.clone())?;
-    let forward = moves.get("forward").ok_or("missing key \"forward\"")?;
-    let down = moves.get("down").ok_or("missing key \"down\"")?;
-    let up = moves.get("up").ok_or("missing key \"up\"")?;
-    let depth = moves.get("depth").ok_or("missing key \"depth\"")?;
+    let move_data = get_move_data(args.input)?;
+    let forward = move_data.get("forward").ok_or("missing key \"forward\"")?;
+    let up = move_data.get("up").ok_or("missing key \"up\"")?;
+    let down = move_data.get("down").ok_or("missing key \"down\"")?;
+    let depth = move_data.get("depth").ok_or("missing key \"depth\"")?;
     println!("Answer Part 1 = {}", forward * (down - up));
     println!("Answer Part 2 = {}", forward * depth);
     Ok(())
@@ -68,9 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn part1_example() {
     let file = Some(std::path::PathBuf::from("input-example"));
-    let moves = get_move_totals(file).unwrap();
+    let move_data = get_move_data(file).unwrap();
     assert_eq!(
-        moves.get("forward").unwrap() * (moves.get("down").unwrap() - moves.get("up").unwrap()),
+        move_data.get("forward").unwrap() * (move_data.get("down").unwrap() - move_data.get("up").unwrap()),
         150
     );
 }
@@ -78,9 +78,9 @@ fn part1_example() {
 #[test]
 fn part1_actual() {
     let file = Some(std::path::PathBuf::from("input-actual"));
-    let moves = get_move_totals(file).unwrap();
+    let move_data = get_move_data(file).unwrap();
     assert_eq!(
-        moves.get("forward").unwrap() * (moves.get("down").unwrap() - moves.get("up").unwrap()),
+        move_data.get("forward").unwrap() * (move_data.get("down").unwrap() - move_data.get("up").unwrap()),
         1938402
     );
 }
@@ -88,13 +88,16 @@ fn part1_actual() {
 #[test]
 fn part2_example() {
     let file = Some(std::path::PathBuf::from("input-example"));
-    let moves = get_move_totals(file).unwrap();
-    assert_eq!(moves.get("forward").unwrap() * moves.get("depth").unwrap(), 900);
+    let move_data = get_move_data(file).unwrap();
+    assert_eq!(move_data.get("forward").unwrap() * move_data.get("depth").unwrap(), 900);
 }
 
 #[test]
 fn part2_actual() {
     let file = Some(std::path::PathBuf::from("input-actual"));
-    let moves = get_move_totals(file).unwrap();
-    assert_eq!(moves.get("forward").unwrap() * moves.get("depth").unwrap(), 1947878632);
+    let move_data = get_move_data(file).unwrap();
+    assert_eq!(
+        move_data.get("forward").unwrap() * move_data.get("depth").unwrap(),
+        1947878632
+    );
 }
