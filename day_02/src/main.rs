@@ -39,15 +39,15 @@ fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(
-        name = "Advent of Code: Day 1, part 1\nVersion:",
-        about = "Count the number of times a depth measurement increases from the previous measurement. (There is no measurement before the first measurement.)"
+        name = "Advent of Code: Day 2, part 1\nVersion:",
+        about = "Calculate the horizontal position and depth you would have after following the planned course."
     )]
     struct Cli {
         #[structopt(
             short,
             long,
             parse(from_os_str),
-            help = "file|stdin -- Input measurements, one per line"
+            help = "file|stdin -- command (forward/up/down unit), one per line"
         )]
         input: Option<std::path::PathBuf>,
     }
