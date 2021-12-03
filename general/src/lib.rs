@@ -42,14 +42,14 @@ pub fn read_string_lines(filename: Option<PathBuf>) -> Result<Vec<String>, Box<d
     match filename {
         Some(file) if file.as_os_str() != "-" => {
             for line in read_lines(file)? {
-                lines.push(line?.trim().to_string());
+                lines.push(line?.trim().into());
             }
             Ok(lines)
         }
         _ => {
             // STDIN
             for line in io::BufReader::new(io::stdin()).lines() {
-                lines.push(line?.trim().to_string());
+                lines.push(line?.trim().into());
             }
             Ok(lines)
         }
