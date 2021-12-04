@@ -1,4 +1,4 @@
-use general::read_string_lines;
+use general::read_data_lines;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -12,7 +12,7 @@ fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<
     let mut aim = 0;
     let mut depth = 0;
 
-    for line in read_string_lines(filename)? {
+    for line in read_data_lines::<String>(filename)? {
         let fields = line.split_whitespace().collect::<Vec<&str>>();
         assert!(
             fields.len() == 2,
@@ -38,10 +38,7 @@ fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
-    #[structopt(
-        name = "Advent of Code: Day 2, part 1\nVersion:",
-        about = "Calculate the horizontal position and depth you would have after following the planned course."
-    )]
+    #[structopt(name = "Advent of Code: Day 2\nVersion:", about = "Dive!")]
     struct Cli {
         #[structopt(
             short,

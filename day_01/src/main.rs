@@ -1,4 +1,4 @@
-use general::read_int_lines;
+use general::read_data_lines;
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/1
@@ -22,10 +22,7 @@ fn count_window_increase(array: &[i32], window: usize) -> usize {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
-    #[structopt(
-        name = "Advent of Code: Day 1, part 1\nVersion:",
-        about = "Count the number of times a depth measurement increases from the previous measurement. (There is no measurement before the first measurement.)"
-    )]
+    #[structopt(name = "Advent of Code: Day 1\nVersion:", about = "Sonar Sweep")]
     struct Cli {
         #[structopt(
             short,
@@ -39,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // ==============================================================
 
-    let measurements = read_int_lines(args.input)?;
+    let measurements = read_data_lines::<i32>(args.input)?;
     println!("Answer Part 1 = {}", count_window_increase(&measurements, 1));
     println!("Answer Part 2 = {}", count_window_increase(&measurements, 3));
     Ok(())
@@ -76,7 +73,7 @@ fn part1_example() {
     assert_eq!(count_window_increase(&measurements, window), 7);
 
     let file = Some(std::path::PathBuf::from("input-example"));
-    let measurements = read_int_lines(file).unwrap();
+    let measurements = read_data_lines::<i32>(file).unwrap();
     assert_eq!(count_window_increase(&measurements, window), 7);
 }
 
@@ -87,14 +84,14 @@ fn part2_example() {
     assert_eq!(count_window_increase(&measurements, window), 5);
 
     let file = Some(std::path::PathBuf::from("input-example"));
-    let measurements = read_int_lines(file).unwrap();
+    let measurements = read_data_lines::<i32>(file).unwrap();
     assert_eq!(count_window_increase(&measurements, window), 5);
 }
 
 #[test]
 fn part1_actual() {
     let file = Some(std::path::PathBuf::from("input-actual"));
-    let measurements = read_int_lines(file).unwrap();
+    let measurements = read_data_lines::<i32>(file).unwrap();
     let window = 1;
     assert_eq!(count_window_increase(&measurements, window), 1233);
 }
@@ -102,7 +99,7 @@ fn part1_actual() {
 #[test]
 fn part2_actual() {
     let file = Some(std::path::PathBuf::from("input-actual"));
-    let measurements = read_int_lines(file).unwrap();
+    let measurements = read_data_lines::<i32>(file).unwrap();
     let window = 3;
     assert_eq!(count_window_increase(&measurements, window), 1275);
 }
