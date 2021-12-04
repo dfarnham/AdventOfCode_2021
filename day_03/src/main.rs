@@ -116,19 +116,9 @@ mod tests {
         data
     }
 
-    fn part1(filename: &str) -> (u32, u32) {
-        let (gamma, epsilon) = get_gamma_epsilon(&get_data(filename));
-        (gamma, epsilon)
-    }
-
-    fn part2(filename: &str) -> (u32, u32) {
-        let (oxy, co2) = get_oxy_co2(&get_data(filename));
-        (oxy, co2)
-    }
-
     #[test]
     fn part1_example() {
-        let (gamma, epsilon) = part1("input-example");
+        let (gamma, epsilon) = get_gamma_epsilon(&get_data("input-example"));
         assert_eq!(gamma, 22);
         assert_eq!(epsilon, 9);
         assert_eq!(gamma * epsilon, 198);
@@ -136,13 +126,13 @@ mod tests {
 
     #[test]
     fn part1_actual() {
-        let (gamma, epsilon) = part1("input-actual");
+        let (gamma, epsilon) = get_gamma_epsilon(&get_data("input-actual"));
         assert_eq!(gamma * epsilon, 1307354);
     }
 
     #[test]
     fn part2_example() {
-        let (oxy, co2) = part2("input-example");
+        let (oxy, co2) = get_oxy_co2(&get_data("input-example"));
         assert_eq!(oxy, 23);
         assert_eq!(co2, 10);
         assert_eq!(oxy * co2, 230);
@@ -150,7 +140,7 @@ mod tests {
 
     #[test]
     fn part2_actual() {
-        let (oxy, co2) = part2("input-actual");
+        let (oxy, co2) = get_oxy_co2(&get_data("input-actual"));
         assert_eq!(oxy * co2, 482500);
     }
 }
