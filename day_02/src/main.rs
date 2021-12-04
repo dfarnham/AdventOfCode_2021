@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/2
+const PUZZLE_NAME: &str = "Advent of Code: Day 2 -- Version:";
+const PUZZLE_ABOUT: &str = "Dive!";
 
 // Given an input file containing key/value pairs separated by whitespace
 // Return a map of summed values for each key and a "depth" calculation
@@ -38,7 +40,7 @@ fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
-    #[structopt(name = "Advent of Code: Day 2\nVersion:", about = "Dive!")]
+    #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
     struct Cli {
         #[structopt(
             short,
@@ -62,39 +64,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn part1_example() {
-    let file = Some(std::path::PathBuf::from("input-example"));
-    let move_data = get_move_data(file).unwrap();
-    assert_eq!(
-        move_data.get("forward").unwrap() * (move_data.get("down").unwrap() - move_data.get("up").unwrap()),
-        150
-    );
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn part1_actual() {
-    let file = Some(std::path::PathBuf::from("input-actual"));
-    let move_data = get_move_data(file).unwrap();
-    assert_eq!(
-        move_data.get("forward").unwrap() * (move_data.get("down").unwrap() - move_data.get("up").unwrap()),
-        1938402
-    );
-}
+    fn part1(filename: &str) -> i32 {
+        let file = Some(std::path::PathBuf::from(filename));
+        let data = get_move_data(file).unwrap();
+        data.get("forward").unwrap() * (data.get("down").unwrap() - data.get("up").unwrap())
+    }
 
-#[test]
-fn part2_example() {
-    let file = Some(std::path::PathBuf::from("input-example"));
-    let move_data = get_move_data(file).unwrap();
-    assert_eq!(move_data.get("forward").unwrap() * move_data.get("depth").unwrap(), 900);
-}
+    fn part2(filename: &str) -> i32 {
+        let file = Some(std::path::PathBuf::from(filename));
+        let data = get_move_data(file).unwrap();
+        data.get("forward").unwrap() * data.get("depth").unwrap()
+    }
 
-#[test]
-fn part2_actual() {
-    let file = Some(std::path::PathBuf::from("input-actual"));
-    let move_data = get_move_data(file).unwrap();
-    assert_eq!(
-        move_data.get("forward").unwrap() * move_data.get("depth").unwrap(),
-        1947878632
-    );
+    #[test]
+    fn part1_example() {
+        assert_eq!(part1("input-example"), 150);
+    }
+
+    #[test]
+    fn part1_actual() {
+        assert_eq!(part1("input-actual"), 1938402);
+    }
+
+    #[test]
+    fn part2_example() {
+        assert_eq!(part2("input-example"), 900);
+    }
+
+    #[test]
+    fn part2_actual() {
+        assert_eq!(part2("input-actual"), 1947878632);
+    }
 }

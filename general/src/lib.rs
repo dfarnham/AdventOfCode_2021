@@ -17,7 +17,10 @@ where
 
 // Reads the lines of a file and returns them as a Vec of the supplied type
 pub fn read_data_lines<T>(filename: Option<PathBuf>) -> Result<Vec<T>, Box<dyn std::error::Error>>
-    where T: FromStr, <T as FromStr>::Err: 'static, <T as FromStr>::Err: std::error::Error
+where
+    T: FromStr,
+    <T as FromStr>::Err: 'static,
+    <T as FromStr>::Err: std::error::Error,
 {
     let mut values = vec![];
     match filename {

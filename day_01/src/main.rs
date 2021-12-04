@@ -2,6 +2,8 @@ use general::read_data_lines;
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/1
+const PUZZLE_NAME: &str = "Advent of Code: Day 1 -- Version:";
+const PUZZLE_ABOUT: &str = "Sonar Sweep";
 
 // Given an input array:
 // Count the number of times the sum of measurements in a provided sliding window increases
@@ -22,7 +24,7 @@ fn count_window_increase(array: &[i32], window: usize) -> usize {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
-    #[structopt(name = "Advent of Code: Day 1\nVersion:", about = "Sonar Sweep")]
+    #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
     struct Cli {
         #[structopt(
             short,
