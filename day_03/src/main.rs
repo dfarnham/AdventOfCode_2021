@@ -1,4 +1,5 @@
 use general::read_data_lines;
+use rayon::prelude::*;
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/3
@@ -12,8 +13,8 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     // how many bits does the largest value in the dataset occupy
     let nbits = ((*data.iter().max().expect("max() failure") as f32).log2()).round() as usize;
     let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<u32>>();
-    for mask in masks.iter().take(nbits) {
-        let count = data.iter().filter(|n| (*n & *mask) == *mask).count();
+    for mask in masks.iter() {
+        let count = data.par_iter().filter(|n| (*n & mask) == *mask).count();
         // are there more bits "on" than "off" in this position?
         match count >= data.len() - count {
             true => gamma |= mask,
@@ -23,52 +24,50 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     (gamma, epsilon)
 }
 
-fn get_oxy_co2(data: &[u32]) -> (u32, u32) {
-    let mut oxy = data.to_vec();
-    let mut co2 = data.to_vec();
-
-    // how many bits does the largest value in the dataset occupy
-    let nbits = ((*data.iter().max().expect("max() failure") as f32).log2()).round() as usize;
-    let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<u32>>();
-    for bit in (0..nbits).rev() {
-        let mask = masks[bit];
-
-        if oxy.len() > 1 {
-            let set1 = oxy
-                .iter()
-                .filter(|n| (*n & mask) == mask)
-                .copied()
-                .collect::<Vec<u32>>();
-            oxy = match set1.len() >= oxy.len() - set1.len() {
-                true => set1,
-                false => oxy
-                    .iter()
-                    .filter(|n| (*n & mask) != mask)
-                    .copied()
-                    .collect::<Vec<u32>>(),
-            };
-        }
-
-        if co2.len() > 1 {
-            let set1 = co2
-                .iter()
-                .filter(|n| (*n & mask) != mask)
-                .copied()
-                .collect::<Vec<u32>>();
-            co2 = match set1.len() <= co2.len() - set1.len() {
-                true => set1,
-                false => co2
-                    .iter()
-                    .filter(|n| (*n & mask) == mask)
-                    .copied()
-                    .collect::<Vec<u32>>(),
-            };
+fn mask_data(data: &[u32], mask: u32) -> (Vec<u32>, Vec<u32>) {
+    assert!(mask != 0, "mask == 0, data = {:?}", data);
+    let mut masked = vec![];
+    let mut unmasked = vec![];
+    for n in data.iter() {
+        match (n & mask) == mask {
+            true => masked.push(*n),
+            false => unmasked.push(*n),
         }
     }
+    (masked, unmasked)
+}
 
-    assert!(oxy.len() == 1, "oxy.len() > 1 = {:?}", oxy);
-    assert!(co2.len() == 1, "co2.len() > 1 = {:?}", co2);
-    (oxy[0], co2[0])
+fn get_co2(data: &[u32], mask: u32) -> u32 {
+    match data.len() == 1 {
+        true => data[0],
+        false => {
+            let (masked, unmasked) = mask_data(data, mask);
+            match 2 * unmasked.len() <= data.len() {
+                true => get_co2(&unmasked, mask >> 1),
+                false => get_co2(&masked, mask >> 1),
+            }
+        }
+    }
+}
+
+fn get_oxy(data: &[u32], mask: u32) -> u32 {
+    match data.len() == 1 {
+        true => data[0],
+        false => {
+            let (masked, unmasked) = mask_data(data, mask);
+            match 2 * masked.len() >= data.len() {
+                true => get_oxy(&masked, mask >> 1),
+                false => get_oxy(&unmasked, mask >> 1),
+            }
+        }
+    }
+}
+
+fn get_oxy_co2(data: &[u32]) -> (u32, u32) {
+    // how many bits does the largest value in the dataset occupy
+    let nbits = ((*data.iter().max().expect("max() failure") as f32).log2()).round() as u32;
+    let mask = 1 << (nbits - 1);
+    (get_oxy(data, mask), get_co2(data, mask))
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -86,7 +85,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::from_args();
 
     // ==============================================================
-
     let data = read_data_lines::<String>(args.input)?
         .iter()
         .map(|s| u32::from_str_radix(s, 2).unwrap())
