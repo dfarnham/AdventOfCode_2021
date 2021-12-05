@@ -1,5 +1,4 @@
 use general::read_data_lines;
-//use ndarray::prelude::*;
 use ndarray::{Array, ArrayBase, Dim, OwnedRepr};
 use structopt::StructOpt;
 
