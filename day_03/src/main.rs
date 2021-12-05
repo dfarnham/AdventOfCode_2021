@@ -42,7 +42,7 @@ fn get_co2(data: &[u32], mask: u32) -> u32 {
         true => data[0],
         false => {
             let (masked, unmasked) = mask_data(data, mask);
-            match 2 * unmasked.len() <= data.len() {
+            match unmasked.len() <= masked.len() {
                 true => get_co2(&unmasked, mask >> 1),
                 false => get_co2(&masked, mask >> 1),
             }
@@ -55,7 +55,7 @@ fn get_oxy(data: &[u32], mask: u32) -> u32 {
         true => data[0],
         false => {
             let (masked, unmasked) = mask_data(data, mask);
-            match 2 * masked.len() >= data.len() {
+            match masked.len() >= unmasked.len() {
                 true => get_oxy(&masked, mask >> 1),
                 false => get_oxy(&unmasked, mask >> 1),
             }
