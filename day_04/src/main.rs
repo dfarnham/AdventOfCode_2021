@@ -7,31 +7,28 @@ use structopt::StructOpt;
 const PUZZLE_NAME: &str = "Advent of Code: Day 4 -- Version:";
 const PUZZLE_ABOUT: &str = "Giant Squid";
 
-const BOARD_SIZE: usize = 5;
+const BOARD_DIM: usize = 5;
+const MATCH: u32 = u32::MAX;
 
 fn winning_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> bool {
-    for row in 0..BOARD_SIZE {
-        let mut count = 0;
-        for col in 0..BOARD_SIZE {
-            if board[[row, col]] == u32::MAX {
-                count += 1;
-            }
-        }
-
-        if count == BOARD_SIZE {
+    for row in 0..BOARD_DIM {
+        if BOARD_DIM
+            == (0..BOARD_DIM)
+                .into_iter()
+                .filter(|col| board[[row, *col]] == MATCH)
+                .count()
+        {
             return true;
         }
     }
 
-    for col in 0..BOARD_SIZE {
-        let mut count = 0;
-        for row in 0..BOARD_SIZE {
-            if board[[row, col]] == u32::MAX {
-                count += 1;
-            }
-        }
-
-        if count == BOARD_SIZE {
+    for col in 0..BOARD_DIM {
+        if BOARD_DIM
+            == (0..BOARD_DIM)
+                .into_iter()
+                .filter(|row| board[[*row, col]] == MATCH)
+                .count()
+        {
             return true;
         }
     }
@@ -41,21 +38,21 @@ fn winning_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> bool {
 
 fn score_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> u32 {
     let mut score = 0;
-    for row in 0..BOARD_SIZE {
-        for col in 0..BOARD_SIZE {
-            if board[[row, col]] != u32::MAX {
-                score += board[[row, col]];
-            }
-        }
+    for row in 0..BOARD_DIM {
+        score += (0..BOARD_DIM)
+            .into_iter()
+            .map(|col| board[[row, col]])
+            .filter(|n| *n != MATCH)
+            .sum::<u32>();
     }
     score
 }
 
 fn update_board(draw: u32, board: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) {
-    for row in 0..BOARD_SIZE {
-        for col in 0..BOARD_SIZE {
+    for row in 0..BOARD_DIM {
+        for col in 0..BOARD_DIM {
             if board[[row, col]] == draw {
-                board[[row, col]] = u32::MAX;
+                board[[row, col]] = MATCH;
             }
         }
     }
@@ -71,11 +68,11 @@ fn get_boards(data: &[String]) -> (Vec<u32>, Vec<ArrayBase<OwnedRepr<u32>, Dim<[
 
     // read all the 5x5 boards into an array
     let mut boards = vec![];
-    let mut board = Array::zeros((0, BOARD_SIZE));
+    let mut board = Array::zeros((0, BOARD_DIM));
     for (i, line) in data[1..].iter().filter(|s| !s.is_empty()).enumerate() {
-        if i % BOARD_SIZE == 0 && !board.is_empty() {
+        if i % BOARD_DIM == 0 && !board.is_empty() {
             boards.push(board);
-            board = Array::zeros((0, BOARD_SIZE));
+            board = Array::zeros((0, BOARD_DIM));
         }
         let row = line
             .split_whitespace()
@@ -87,10 +84,10 @@ fn get_boards(data: &[String]) -> (Vec<u32>, Vec<ArrayBase<OwnedRepr<u32>, Dim<[
         boards.push(board);
     }
 
-    // validate all the boards are 5x5 (BOARD_SIZE x BOARD_SIZE)
+    // validate all the boards are 5x5 (BOARD_DIM x BOARD_DIM)
     for b in &boards {
-        assert_eq!(b.nrows(), BOARD_SIZE, "invalid board rows = {}", b.nrows());
-        assert_eq!(b.ncols(), BOARD_SIZE, "invalid board columns = {}", b.ncols());
+        assert_eq!(b.nrows(), BOARD_DIM, "invalid board rows = {}", b.nrows());
+        assert_eq!(b.ncols(), BOARD_DIM, "invalid board columns = {}", b.ncols());
     }
 
     (random_draw, boards)
@@ -117,8 +114,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //println!("random_draw = {:?}", random_draw);
 
     for b in &boards {
-        assert_eq!(b.nrows(), BOARD_SIZE, "invalid board rows = {}", b.nrows());
-        assert_eq!(b.ncols(), BOARD_SIZE, "invalid board columns = {}", b.ncols());
+        assert_eq!(b.nrows(), BOARD_DIM, "invalid board rows = {}", b.nrows());
+        assert_eq!(b.ncols(), BOARD_DIM, "invalid board columns = {}", b.ncols());
         //println!("board = {:?}", b);
     }
 
