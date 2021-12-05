@@ -1,5 +1,6 @@
 use general::read_data_lines;
-use ndarray::prelude::*;
+//use ndarray::prelude::*;
+use ndarray::{Array, ArrayBase, Dim, OwnedRepr};
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/5
@@ -78,6 +79,43 @@ fn get_diagonal(segments: &[LineSegment]) -> Vec<LineSegment> {
         .collect::<Vec<LineSegment>>()
 }
 
+fn update_grid_horiz_vert_count(
+    segments: &[LineSegment],
+    grid: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>,
+) -> usize {
+    for seg in get_horizontal(segments).iter() {
+        for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
+            grid[[x as usize, seg.p1.y as usize]] += 1;
+        }
+    }
+    for seg in get_vertical(segments).iter() {
+        for y in (seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y)).into_iter() {
+            grid[[seg.p1.x as usize, y as usize]] += 1;
+        }
+    }
+    grid.iter().filter(|e| *e > &1).count()
+}
+
+fn update_grid_diag_count(segments: &[LineSegment], grid: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> usize {
+    for seg in get_diagonal(segments).iter() {
+        let mut x = seg.p1.x;
+        let mut y = seg.p1.y;
+        grid[[x as usize, y as usize]] += 1;
+        while !((x == seg.p2.x) && (y == seg.p2.y)) {
+            x = match seg.p1.x < seg.p2.x {
+                true => x + 1,
+                false => x - 1,
+            };
+            y = match seg.p1.y < seg.p2.y {
+                true => y + 1,
+                false => y - 1,
+            };
+            grid[[x as usize, y as usize]] += 1;
+        }
+    }
+    grid.iter().filter(|e| *e > &1).count()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
@@ -96,40 +134,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let data = read_data_lines::<String>(args.input)?;
     let segments = get_line_segments(&data);
-
     let mut grid = Array::from_elem(get_grid_dimensions(&segments), 0);
-
-    for seg in get_horizontal(&segments).iter() {
-        for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
-            grid[[x as usize, seg.p1.y as usize]] += 1;
-        }
-    }
-    for seg in get_vertical(&segments).iter() {
-        for y in (seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y)).into_iter() {
-            grid[[seg.p1.x as usize, y as usize]] += 1;
-        }
-    }
-
-    let horiz_vert_overlap_count = grid.iter().filter(|e| *e > &1).count();
-
-    for seg in get_diagonal(&segments).iter() {
-        let mut x = seg.p1.x;
-        let mut y = seg.p1.y;
-        grid[[x as usize, y as usize]] += 1;
-        while !((x == seg.p2.x) && (y == seg.p2.y)) {
-            x = match seg.p1.x < seg.p2.x {
-                true => x + 1,
-                false => x - 1,
-            };
-            y = match seg.p1.y < seg.p2.y {
-                true => y + 1,
-                false => y - 1,
-            };
-            grid[[x as usize, y as usize]] += 1;
-        }
-    }
-
-    let horiz_vert_diag_overlap_count = grid.iter().filter(|e| *e > &1).count();
+    let horiz_vert_overlap_count = update_grid_horiz_vert_count(&segments, &mut grid);
+    let horiz_vert_diag_overlap_count = update_grid_diag_count(&segments, &mut grid);
 
     println!("Answer Part 1 = {}", horiz_vert_overlap_count);
     println!("Answer Part 2 = {}", horiz_vert_diag_overlap_count);
@@ -144,58 +151,17 @@ mod tests {
         let file = Some(std::path::PathBuf::from(filename));
         let data = read_data_lines::<String>(file).unwrap();
         let segments = get_line_segments(&data);
-
         let mut grid = Array::from_elem(get_grid_dimensions(&segments), 0);
-
-        for seg in get_horizontal(&segments).iter() {
-            for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
-                grid[[x as usize, seg.p1.y as usize]] += 1;
-            }
-        }
-        for seg in get_vertical(&segments).iter() {
-            for y in (seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y)).into_iter() {
-                grid[[seg.p1.x as usize, y as usize]] += 1;
-            }
-        }
-
-        grid.iter().filter(|e| *e > &1).count()
+        update_grid_horiz_vert_count(&segments, &mut grid)
     }
 
     fn part2(filename: &str) -> usize {
         let file = Some(std::path::PathBuf::from(filename));
         let data = read_data_lines::<String>(file).unwrap();
         let segments = get_line_segments(&data);
-
         let mut grid = Array::from_elem(get_grid_dimensions(&segments), 0);
-
-        for seg in get_horizontal(&segments).iter() {
-            for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
-                grid[[x as usize, seg.p1.y as usize]] += 1;
-            }
-        }
-        for seg in get_vertical(&segments).iter() {
-            for y in (seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y)).into_iter() {
-                grid[[seg.p1.x as usize, y as usize]] += 1;
-            }
-        }
-
-        for seg in get_diagonal(&segments).iter() {
-            let mut x = seg.p1.x;
-            let mut y = seg.p1.y;
-            grid[[x as usize, y as usize]] += 1;
-            while !((x == seg.p2.x) && (y == seg.p2.y)) {
-                x = match seg.p1.x < seg.p2.x {
-                    true => x + 1,
-                    false => x - 1,
-                };
-                y = match seg.p1.y < seg.p2.y {
-                    true => y + 1,
-                    false => y - 1,
-                };
-                grid[[x as usize, y as usize]] += 1;
-            }
-        }
-        grid.iter().filter(|e| *e > &1).count()
+        update_grid_horiz_vert_count(&segments, &mut grid);
+        update_grid_diag_count(&segments, &mut grid)
     }
 
     #[test]
