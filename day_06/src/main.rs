@@ -6,9 +6,8 @@ use structopt::StructOpt;
 const PUZZLE_NAME: &str = "Advent of Code: Day 6 -- Version:";
 const PUZZLE_ABOUT: &str = "Lanternfish";
 
-fn cycle(data: &[u8], days: u32) -> u64 {
-    let mut counts = Counter::<u8, u64>::new();
-    counts += Counter::<_, u64>::init(data.to_vec());
+fn cycle(data: &[u8], days: u32) -> usize {
+    let counts = data.iter().collect::<Counter<_>>();
     let mut state = [
         counts[&0], counts[&1], counts[&2], counts[&3], counts[&4], counts[&5], counts[&6], counts[&7], counts[&8],
     ];
@@ -25,7 +24,7 @@ fn cycle(data: &[u8], days: u32) -> u64 {
             state[0],
         ];
     }
-    state.iter().sum::<u64>()
+    state.iter().sum::<usize>()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
