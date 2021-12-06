@@ -37,15 +37,16 @@ fn winning_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> bool {
 }
 
 fn score_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> u32 {
-    let mut score = 0;
-    for row in 0..BOARD_DIM {
-        score += (0..BOARD_DIM)
-            .into_iter()
-            .map(|col| board[[row, col]])
-            .filter(|n| *n != MATCH)
-            .sum::<u32>();
-    }
-    score
+    (0..BOARD_DIM)
+        .into_iter()
+        .map(|row| {
+            (0..BOARD_DIM)
+                .into_iter()
+                .map(|col| board[[row, col]])
+                .filter(|n| *n != MATCH)
+                .sum::<u32>()
+        })
+        .sum::<u32>()
 }
 
 fn update_board(draw: u32, board: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) {

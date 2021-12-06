@@ -28,9 +28,9 @@ fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<
         *units += value;
 
         match fields[0] {
-            "forward" => depth += aim * value,
-            "down" => aim += value,
             "up" => aim -= value,
+            "down" => aim += value,
+            "forward" => depth += aim * value,
             _ => panic!("{}", format!("Unknown command {}", fields[0])),
         }
     }

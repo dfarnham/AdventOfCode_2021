@@ -6,17 +6,21 @@ use structopt::StructOpt;
 const PUZZLE_NAME: &str = "Advent of Code: Day 3 -- Version:";
 const PUZZLE_ABOUT: &str = "Binary Diagnostic";
 
+// how many bits does the largest value in the dataset occupy
+fn nbits(data: &[u32]) -> usize {
+    ((*data.iter().max().expect("max() failure") as f32).log2()).round() as usize
+}
+
 fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     let mut gamma = 0;
     let mut epsilon = 0;
 
-    // how many bits does the largest value in the dataset occupy
-    let nbits = ((*data.iter().max().expect("max() failure") as f32).log2()).round() as usize;
+    let nbits = nbits(data);
     let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<u32>>();
     for mask in masks.iter() {
         let count = data.par_iter().filter(|n| (*n & mask) == *mask).count();
         // are there more bits "on" than "off" in this position?
-        match count >= data.len() - count {
+        match 2 * count >= data.len() {
             true => gamma |= mask,
             false => epsilon |= mask,
         }
@@ -65,7 +69,7 @@ fn get_oxy(data: &[u32], mask: u32) -> u32 {
 
 fn get_oxy_co2(data: &[u32]) -> (u32, u32) {
     // how many bits does the largest value in the dataset occupy
-    let nbits = ((*data.iter().max().expect("max() failure") as f32).log2()).round() as u32;
+    let nbits = nbits(data);
     let mask = 1 << (nbits - 1);
     (get_oxy(data, mask), get_co2(data, mask))
 }

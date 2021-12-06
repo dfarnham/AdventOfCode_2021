@@ -27,15 +27,16 @@ fn get_line_segments(data: &[String]) -> Vec<LineSegment> {
             .split(',')
             .map(|s| s.trim().parse::<u32>().unwrap())
             .collect::<Vec<u32>>();
-        let p1 = Point {
-            x: coordinates[0],
-            y: coordinates[1],
-        };
-        let p2 = Point {
-            x: coordinates[2],
-            y: coordinates[3],
-        };
-        line_segments.push(LineSegment { p1, p2 });
+        line_segments.push(LineSegment {
+            p1: Point {
+                x: coordinates[0],
+                y: coordinates[1],
+            },
+            p2: Point {
+                x: coordinates[2],
+                y: coordinates[3],
+            },
+        });
     }
     line_segments
 }
@@ -92,15 +93,17 @@ fn update_grid_horiz_vert_count(
             grid[[seg.p1.x as usize, y as usize]] += 1;
         }
     }
-    grid.iter().filter(|e| *e > &1).count()
+    grid.iter().filter(|n| *n > &1).count()
 }
 
 fn update_grid_diag_count(segments: &[LineSegment], grid: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> usize {
     for seg in get_diagonal(segments).iter() {
         let mut x = seg.p1.x;
         let mut y = seg.p1.y;
+
         grid[[x as usize, y as usize]] += 1;
-        while !((x == seg.p2.x) && (y == seg.p2.y)) {
+        // can test either x or y as the diagonal is traversed
+        while x != seg.p2.x {
             x = match seg.p1.x < seg.p2.x {
                 true => x + 1,
                 false => x - 1,
@@ -112,7 +115,7 @@ fn update_grid_diag_count(segments: &[LineSegment], grid: &mut ArrayBase<OwnedRe
             grid[[x as usize, y as usize]] += 1;
         }
     }
-    grid.iter().filter(|e| *e > &1).count()
+    grid.iter().filter(|n| *n > &1).count()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
