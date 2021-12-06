@@ -17,13 +17,11 @@ struct LineSegment {
     p2: Point,
 }
 
-#[allow(clippy::type_complexity)]
 fn get_line_segments(data: &[String]) -> Vec<LineSegment> {
     let mut line_segments = vec![];
     for line in data {
         let coordinates = line
             .replace("->", ",")
-            .trim()
             .split(',')
             .map(|s| s.trim().parse::<u32>().unwrap())
             .collect::<Vec<u32>>();
