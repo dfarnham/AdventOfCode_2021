@@ -1,5 +1,5 @@
 use general::read_data_lines;
-use ndarray::{Array, ArrayBase, ArrayView, Dim, OwnedRepr};
+use ndarray::{Array, Array2, ArrayView};
 use std::collections::HashSet;
 use structopt::StructOpt;
 
@@ -10,7 +10,7 @@ const PUZZLE_ABOUT: &str = "Giant Squid";
 const BOARD_DIM: usize = 5;
 const MATCH: u32 = u32::MAX;
 
-fn winning_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> bool {
+fn winning_board(board: &Array2<u32>) -> bool {
     for row in 0..BOARD_DIM {
         if BOARD_DIM
             == (0..BOARD_DIM)
@@ -36,7 +36,7 @@ fn winning_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> bool {
     false
 }
 
-fn score_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> u32 {
+fn score_board(board: &Array2<u32>) -> u32 {
     (0..BOARD_DIM)
         .into_iter()
         .map(|row| {
@@ -49,7 +49,7 @@ fn score_board(board: &ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> u32 {
         .sum::<u32>()
 }
 
-fn update_board(draw: u32, board: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) {
+fn update_board(draw: u32, board: &mut Array2<u32>) {
     for row in 0..BOARD_DIM {
         for col in 0..BOARD_DIM {
             if board[[row, col]] == draw {
@@ -59,8 +59,7 @@ fn update_board(draw: u32, board: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>
     }
 }
 
-#[allow(clippy::type_complexity)]
-fn get_boards(data: &[String]) -> (Vec<u32>, Vec<ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>>) {
+fn get_boards(data: &[String]) -> (Vec<u32>, Vec<Array2<u32>>) {
     // random draw is the first line
     let random_draw = data[0]
         .split(',')

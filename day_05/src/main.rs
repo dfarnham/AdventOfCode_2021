@@ -1,5 +1,5 @@
 use general::read_data_lines;
-use ndarray::{Array, ArrayBase, Dim, OwnedRepr};
+use ndarray::{Array, Array2};
 use structopt::StructOpt;
 
 // https://adventofcode.com/2021/day/5
@@ -77,10 +77,7 @@ fn get_diagonal(segments: &[LineSegment]) -> Vec<LineSegment> {
         .collect::<Vec<LineSegment>>()
 }
 
-fn update_grid_horiz_vert_count(
-    segments: &[LineSegment],
-    grid: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>,
-) -> usize {
+fn update_grid_horiz_vert_count(segments: &[LineSegment], grid: &mut Array2<u32>) -> usize {
     for seg in get_horizontal(segments).iter() {
         for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
             grid[[x as usize, seg.p1.y as usize]] += 1;
@@ -94,7 +91,7 @@ fn update_grid_horiz_vert_count(
     grid.iter().filter(|n| *n > &1).count()
 }
 
-fn update_grid_diag_count(segments: &[LineSegment], grid: &mut ArrayBase<OwnedRepr<u32>, Dim<[usize; 2]>>) -> usize {
+fn update_grid_diag_count(segments: &[LineSegment], grid: &mut Array2<u32>) -> usize {
     for seg in get_diagonal(segments).iter() {
         let mut x = seg.p1.x;
         let mut y = seg.p1.y;
