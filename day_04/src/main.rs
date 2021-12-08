@@ -36,24 +36,22 @@ fn winning_board(board: &Array2<u32>) -> bool {
 }
 
 fn score_board(board: &Array2<u32>) -> u32 {
-    (0..BOARD_DIM)
-        .into_iter()
-        .map(|row| {
-            (0..BOARD_DIM)
-                .into_iter()
-                .map(|col| board[[row, col]])
-                .filter(|n| *n != MATCH)
-                .sum::<u32>()
-        })
-        .sum::<u32>()
+    board.iter().filter(|&n| *n != MATCH).sum::<u32>()
 }
 
 fn update_board(draw: u32, board: &mut Array2<u32>) {
+    /*
     for row in 0..BOARD_DIM {
         for col in 0..BOARD_DIM {
             if board[[row, col]] == draw {
                 board[[row, col]] = MATCH;
             }
+        }
+    }
+    */
+    for elem in board.iter_mut() {
+        if *elem == draw {
+            *elem = MATCH;
         }
     }
 }
