@@ -3,9 +3,8 @@ use general::read_data_lines;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/7
 const PUZZLE_NAME: &str = "Advent of Code: Day 7 -- Version:";
-const PUZZLE_ABOUT: &str = "The Treachery of Whales";
+const PUZZLE_ABOUT: &str = "The Treachery of Whales: https://adventofcode.com/2021/day/7";
 
 fn get_solution2(data: &[u32]) -> (usize, u32) {
     let counts = data.iter().collect::<Counter<_>>();
@@ -39,7 +38,6 @@ fn get_solution2(data: &[u32]) -> (usize, u32) {
             _ => break,
         }
     }
-
     (best_cost, best_pos)
 }
 

@@ -1,9 +1,8 @@
 use general::read_data_lines;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/1
 const PUZZLE_NAME: &str = "Advent of Code: Day 1 -- Version:";
-const PUZZLE_ABOUT: &str = "Sonar Sweep";
+const PUZZLE_ABOUT: &str = "Sonar Sweep: https://adventofcode.com/2021/day/1";
 
 // Given an input array:
 // Count the number of times the sum of measurements in a provided sliding window increases

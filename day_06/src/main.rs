@@ -3,9 +3,8 @@ use general::read_data_lines;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/6
 const PUZZLE_NAME: &str = "Advent of Code: Day 6 -- Version:";
-const PUZZLE_ABOUT: &str = "Lanternfish";
+const PUZZLE_ABOUT: &str = "Lanternfish: https://adventofcode.com/2021/day/6";
 
 fn cycle(data: &[u8], days: u32) -> usize {
     let counts = data.iter().collect::<Counter<_>>();

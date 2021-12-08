@@ -2,9 +2,8 @@ use general::read_data_lines;
 use ndarray::{Array, Array2};
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/5
 const PUZZLE_NAME: &str = "Advent of Code: Day 5 -- Version:";
-const PUZZLE_ABOUT: &str = "Hydrothermal Venture";
+const PUZZLE_ABOUT: &str = "Hydrothermal Venture: https://adventofcode.com/2021/day/5";
 
 #[derive(Copy, Clone, Debug)]
 struct Point {

@@ -3,9 +3,8 @@ use ndarray::{Array, Array2, ArrayView};
 use std::collections::HashSet;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/4
 const PUZZLE_NAME: &str = "Advent of Code: Day 4 -- Version:";
-const PUZZLE_ABOUT: &str = "Giant Squid";
+const PUZZLE_ABOUT: &str = "Giant Squid: https://adventofcode.com/2021/day/4";
 
 const BOARD_DIM: usize = 5;
 const MATCH: u32 = u32::MAX;

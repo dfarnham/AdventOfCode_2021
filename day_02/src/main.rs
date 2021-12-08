@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/2
 const PUZZLE_NAME: &str = "Advent of Code: Day 2 -- Version:";
-const PUZZLE_ABOUT: &str = "Dive!";
+const PUZZLE_ABOUT: &str = "Dive!: https://adventofcode.com/2021/day/2";
 
 // Given an input file containing key/value pairs separated by whitespace
 // Return a map of summed values for each key and a "depth" calculation

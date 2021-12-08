@@ -2,9 +2,8 @@ use general::read_data_lines;
 use rayon::prelude::*;
 use structopt::StructOpt;
 
-// https://adventofcode.com/2021/day/3
 const PUZZLE_NAME: &str = "Advent of Code: Day 3 -- Version:";
-const PUZZLE_ABOUT: &str = "Binary Diagnostic";
+const PUZZLE_ABOUT: &str = "Binary Diagnostic: https://adventofcode.com/2021/day/3";
 
 // how many bits does the largest value in the dataset occupy
 fn nbits(data: &[u32]) -> usize {
