@@ -9,71 +9,56 @@ const PUZZLE_ABOUT: &str = "The Treachery of Whales: https://adventofcode.com/20
 fn get_solution2(data: &[u32]) -> (usize, u32) {
     let counts = data.iter().collect::<Counter<_>>();
 
-    let min = match counts.keys().min() {
-        Some(&n) => *n,
-        None => panic!("min() failure"),
-    };
-    let max = match counts.keys().max() {
-        Some(&n) => *n,
-        None => panic!("max() failure"),
-    };
+    let min = **counts.keys().min().expect("min() failure");
+    let max = **counts.keys().max().expect("max() failure");
 
-    let mut best_cost = usize::MAX;
-    let mut best_pos = min;
+    let mut best: Option<(_, _)> = None;
+    let sum_to_n = |n: u32| n * (n + 1) / 2;
     for pos in min..=max {
         let left_cost = (min..pos)
             .into_iter()
-            .map(|i| counts[&i] * ((pos - i) * (pos - i + 1) / 2) as usize)
+            .map(|i| counts[&i] * sum_to_n(pos - i) as usize)
             .sum::<usize>();
         let right_cost = (pos..=max)
             .into_iter()
-            .map(|i| counts[&i] * ((i - pos) * (i - pos + 1) / 2) as usize)
+            .map(|i| counts[&i] * sum_to_n(i - pos) as usize)
             .sum::<usize>();
-
         match left_cost + right_cost {
-            n if n < best_cost => {
-                best_cost = n;
-                best_pos = pos
-            }
+            n if best.is_none() || n < best.unwrap().0 => best = Some((n, pos)),
             _ => break,
         }
     }
-    (best_cost, best_pos)
+    best.expect("no solution chosen")
 }
 
 fn get_solution1(data: &[u32]) -> (usize, u32) {
     let counts = data.iter().collect::<Counter<_>>();
 
-    let mut left = match counts.keys().min() {
-        Some(&n) => *n,
-        None => panic!("min() failure"),
-    };
-    let mut right = match counts.keys().max() {
-        Some(&n) => *n,
-        None => panic!("max() failure"),
-    };
+    let mut left_ptr = **counts.keys().min().expect("min() failure");
+    let mut right_ptr = **counts.keys().max().expect("max() failure");
 
-    let mut left_count = counts[&left];
-    let mut right_count = counts[&right];
+    let mut left_mass = counts[&left_ptr];
+    let mut rigt_mass = counts[&right_ptr];
     let mut cost = 0;
-    while left != right {
-        match left_count < right_count {
+    while left_ptr != right_ptr {
+        match left_mass < rigt_mass {
             true => {
-                cost += left_count;
-                left += 1;
-                left_count += counts[&left];
+                cost += left_mass;
+                left_ptr += 1;
+                left_mass += counts[&left_ptr];
             }
             false => {
-                cost += right_count;
-                right -= 1;
-                right_count += counts[&right];
+                cost += rigt_mass;
+                right_ptr -= 1;
+                rigt_mass += counts[&right_ptr];
             }
         }
     }
-    (cost, left)
+    println!("left_mass = {}, rigt_mass = {}, cost = {}", left_mass, rigt_mass, cost);
+    (cost, left_ptr)
 }
 
-fn get_data<T>(data: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
+fn get_datapoints<T>(data: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
 where
     T: FromStr,
     <T as FromStr>::Err: std::error::Error,
@@ -102,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ==============================================================
 
     let data = read_data_lines::<String>(args.input)?;
-    let data = get_data::<u32>(&data[0])?;
+    let data = get_datapoints::<u32>(&data[0])?;
 
     let (fuel_consumption, position) = get_solution1(&data);
     //println!("Position = {}", position);
@@ -118,15 +103,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 mod tests {
     use super::*;
 
-    fn get_filedata(filename: &str) -> Vec<u32> {
+    fn datapoints(filename: &str) -> Vec<u32> {
         let file = Some(std::path::PathBuf::from(filename));
         let data = read_data_lines::<String>(file).unwrap();
-        get_data::<u32>(&data[0]).unwrap()
+        let line = &data[0];
+        get_datapoints::<u32>(line).unwrap()
     }
 
     #[test]
     fn part1_example() {
-        let data = get_filedata("input-example");
+        let data = datapoints("input-example");
         let (fuel_consumption, position) = get_solution1(&data);
         assert_eq!(fuel_consumption, 37);
         assert_eq!(position, 2);
@@ -134,7 +120,7 @@ mod tests {
 
     #[test]
     fn part1_actual() {
-        let data = get_filedata("input-actual");
+        let data = datapoints("input-actual");
         let (fuel_consumption, position) = get_solution1(&data);
         assert_eq!(fuel_consumption, 349769);
         assert_eq!(position, 331);
@@ -142,7 +128,7 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        let data = get_filedata("input-example");
+        let data = datapoints("input-example");
         let (fuel_consumption, position) = get_solution2(&data);
         assert_eq!(fuel_consumption, 168);
         assert_eq!(position, 5);
@@ -150,7 +136,7 @@ mod tests {
 
     #[test]
     fn part2_actual() {
-        let data = get_filedata("input-actual");
+        let data = datapoints("input-actual");
         let (fuel_consumption, position) = get_solution2(&data);
         assert_eq!(fuel_consumption, 99540554);
         assert_eq!(position, 479);

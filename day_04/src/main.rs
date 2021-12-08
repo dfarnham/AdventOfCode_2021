@@ -2,6 +2,7 @@ use general::read_data_lines;
 use ndarray::{Array, Array2, ArrayView};
 use std::collections::HashSet;
 use structopt::StructOpt;
+//use std::str::FromStr;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 4 -- Version:";
 const PUZZLE_ABOUT: &str = "Giant Squid: https://adventofcode.com/2021/day/4";
@@ -90,30 +91,13 @@ fn get_boards(data: &[String]) -> (Vec<u32>, Vec<Array2<u32>>) {
     (random_draw, boards)
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    #[derive(StructOpt)]
-    #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
-    struct Cli {
-        #[structopt(
-            short,
-            long,
-            parse(from_os_str),
-            help = "file|stdin -- diagnostic binary, one per line"
-        )]
-        input: Option<std::path::PathBuf>,
-    }
-    let args = Cli::from_args();
-
-    // ==============================================================
-
-    let data = read_data_lines::<String>(args.input)?;
-    let (random_draw, mut boards) = get_boards(&data);
+fn get_scores(data: &[String]) -> (Option<u32>, Option<u32>) {
+    let (random_draw, mut boards) = get_boards(data);
     //println!("random_draw = {:?}", random_draw);
 
     for b in &boards {
         assert_eq!(b.nrows(), BOARD_DIM, "invalid board rows = {}", b.nrows());
         assert_eq!(b.ncols(), BOARD_DIM, "invalid board columns = {}", b.ncols());
-        //println!("board = {:?}", b);
     }
 
     let mut score1 = None;
@@ -156,6 +140,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             i += 1;
         }
     }
+    (score1, score2)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[derive(StructOpt)]
+    #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
+    struct Cli {
+        #[structopt(
+            short,
+            long,
+            parse(from_os_str),
+            help = "file|stdin -- diagnostic binary, one per line"
+        )]
+        input: Option<std::path::PathBuf>,
+    }
+    let args = Cli::from_args();
+
+    // ==============================================================
+
+    let (score1, score2) = get_scores(&read_data_lines::<String>(args.input)?);
 
     println!("Answer Part 1 = {}", score1.ok_or("no winner")?);
     println!("Answer Part 2 = {}", score2.ok_or("no winner")?);
@@ -166,57 +170,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 mod tests {
     use super::*;
 
-    fn part1(filename: &str) -> u32 {
+    /*
+    fn get_data<T>(filename: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: std::error::Error,
+        <T as FromStr>::Err: 'static
+    {
         let file = Some(std::path::PathBuf::from(filename));
-        let data = read_data_lines::<String>(file).unwrap();
-        let (random_draw, mut boards) = get_boards(&data);
+        Ok(read_data_lines::<T>(file)?)
+    }
+    */
 
-        let mut score = None;
-        for draw in random_draw.iter() {
-            if score.is_none() {
-                for b in &mut boards {
-                    update_board(*draw, b);
-                }
-                for b in &boards {
-                    if winning_board(b) {
-                        score = Some(score_board(b) * draw);
-                    }
-                }
-            }
-        }
-        score.unwrap()
+    fn part1(filename: &str) -> u32 {
+        let data = read_data_lines::<String>(Some(std::path::PathBuf::from(filename))).unwrap();
+        let (score1, _score2) = get_scores(&data);
+        score1.unwrap()
     }
 
     fn part2(filename: &str) -> u32 {
-        let file = Some(std::path::PathBuf::from(filename));
-        let data = read_data_lines::<String>(file).unwrap();
-        let (random_draw, mut boards) = get_boards(&data);
-
-        let mut completed = HashSet::new();
-        let mut score = None;
-        for draw in random_draw.iter() {
-            let mut i = 0;
-            for b in &mut boards {
-                if !completed.contains(&i) {
-                    update_board(*draw, b);
-                }
-                i += 1;
-            }
-
-            i = 0;
-            for b in &boards {
-                if !completed.contains(&i) {
-                    if winning_board(b) {
-                        completed.insert(i);
-                        if completed.len() == boards.len() {
-                            score = Some(score_board(b) * draw);
-                        }
-                    }
-                }
-                i += 1;
-            }
-        }
-        score.unwrap()
+        let data = read_data_lines::<String>(Some(std::path::PathBuf::from(filename))).unwrap();
+        let (_score1, score2) = get_scores(&data);
+        score2.unwrap()
     }
 
     #[test]
