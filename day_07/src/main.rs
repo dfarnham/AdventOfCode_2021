@@ -54,7 +54,7 @@ fn get_solution1(data: &[u32]) -> (usize, u32) {
             }
         }
     }
-    println!("left_mass = {}, rigt_mass = {}, cost = {}", left_mass, rigt_mass, cost);
+    //println!("left_mass = {}, rigt_mass = {}, cost = {}", left_mass, rigt_mass, cost);
     (cost, left_ptr)
 }
 
