@@ -1,0 +1,411 @@
+use counter::Counter;
+use general::read_data_lines;
+use itertools::Itertools;
+use structopt::StructOpt;
+//use std::collections::BTreeSet;
+
+const PUZZLE_NAME: &str = "Advent of Code: Day 8 -- Version:";
+const PUZZLE_ABOUT: &str = "Seven Segment Search: https://adventofcode.com/2021/day/8";
+
+/*
+  0:        1:        2:        3:        4:        5:        6:        7:        8:        9:
+ aaaa      ....      aaaa      aaaa      ....      aaaa      aaaa      aaaa      aaaa      aaaa
+b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
+b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
+ ....      ....      dddd      dddd      dddd      dddd      dddd      ....      dddd      dddd
+e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
+e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
+ gggg      ....      gggg      gggg      ....      gggg      gggg      ....      gggg      gggg
+*/
+
+fn check_a(dirty: &[String], digits: &[u8]) -> Option<String> {
+    // "a" is known given digits 1,7
+    if digits.contains(&1) && digits.contains(&7) {
+        let one = digits.iter().position(|&n| n == 1).unwrap();
+        let seven = digits.iter().position(|&n| n == 7).unwrap();
+        for c in dirty[seven].chars() {
+            if !dirty[one].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+    None
+}
+fn check_d(dirty: &[String], digits: &[u8], a: &str, g: &str) -> Option<String> {
+    // "d" is known given digits 0,8
+    if digits.contains(&0) && digits.contains(&8) {
+        let zero = digits.iter().position(|&n| n == 0).unwrap();
+        let eight = digits.iter().position(|&n| n == 8).unwrap();
+        for c in dirty[eight].chars() {
+            if !dirty[zero].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+
+    // "d" is known given digits 1,3,"a","g"
+    if !a.is_empty() && !g.is_empty() && digits.contains(&1) && digits.contains(&3) {
+        let one = digits.iter().position(|&n| n == 1).unwrap();
+        let three = digits.iter().position(|&n| n == 3).unwrap();
+        for c in dirty[three].chars() {
+            if !a.contains(c) && !g.contains(c) && !dirty[one].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+    None
+}
+fn check_b(dirty: &[String], digits: &[u8]) -> Option<String> {
+    // "b" is known given digits 3,4
+    if digits.contains(&3) && digits.contains(&4) {
+        let three = digits.iter().position(|&n| n == 3).unwrap();
+        let four = digits.iter().position(|&n| n == 4).unwrap();
+        for c in dirty[four].chars() {
+            if !dirty[three].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+    None
+}
+fn check_e(dirty: &[String], digits: &[u8]) -> Option<String> {
+    // "e" is known given digits 5,6
+    if digits.contains(&5) && digits.contains(&6) {
+        let five = digits.iter().position(|&n| n == 5).unwrap();
+        let six = digits.iter().position(|&n| n == 6).unwrap();
+        for c in dirty[six].chars() {
+            if !dirty[five].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+
+    // "e" is known given digits 8,9
+    if digits.contains(&8) && digits.contains(&9) {
+        let eight = digits.iter().position(|&n| n == 8).unwrap();
+        let nine = digits.iter().position(|&n| n == 9).unwrap();
+        for c in dirty[eight].chars() {
+            if !dirty[nine].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+    None
+}
+fn check_g(dirty: &[String], digits: &[u8], a: &str) -> Option<String> {
+    // "g" is known given digits 3,4 and "a"
+    if digits.contains(&3) && digits.contains(&4) && !a.is_empty() {
+        let three = digits.iter().position(|&n| n == 3).unwrap();
+        let four = digits.iter().position(|&n| n == 4).unwrap();
+        for c in dirty[three].chars() {
+            if !a.contains(c) && !dirty[four].contains(c) {
+                return Some(c.into());
+            }
+        }
+    }
+    None
+}
+
+fn get_solution1(dirty: &[String]) -> Vec<u8> {
+    let mut digits = vec![u8::MAX; 14];
+    let mut a = "".to_string();
+    let mut b = "".to_string();
+    let mut c = "".to_string();
+    let mut d = "".to_string();
+    let mut e = "".to_string();
+    let mut f = "".to_string();
+    let mut g = "".to_string();
+
+    /*
+    let mut output_chars = BTreeSet::new();
+    for (i,digit) in dirty[10..].iter().enumerate() {
+        //println!("i = {}, digit = {}", i, digit);
+        for ch in digit.chars() {
+            output_chars.insert(ch);
+        }
+    }
+    //println!("output_chars = {:?}", output_chars);
+    */
+
+    for (i, digit) in dirty.iter().enumerate() {
+        match digit.len() {
+            2 => digits[i] = 1,
+            3 => digits[i] = 7,
+            4 => digits[i] = 4,
+            7 => digits[i] = 8,
+            _ => (),
+        }
+    }
+
+    // if digit.len() == 5 and it contains the 1 chars it's a 3
+    if digits.contains(&1) {
+        let one = digits.iter().position(|&n| n == 1).unwrap();
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 5 {
+                let mut three = true;
+                for c in dirty[one].chars() {
+                    if !digit.contains(c) {
+                        three = false;
+                    }
+                }
+                if three {
+                    digits[i] = 3;
+                }
+            }
+        }
+    }
+
+    for (i, digit) in dirty.iter().enumerate() {
+        if !d.is_empty() && digit.len() == 6 {
+            let ch: Vec<char> = d.chars().collect();
+            if !digit.contains(ch[0]) {
+                digits[i] = 0;
+            }
+        }
+    }
+
+    if a.is_empty() {
+        if let Some(n) = check_a(dirty, &digits) {
+            a = n;
+        }
+    }
+    if b.is_empty() {
+        if let Some(n) = check_b(dirty, &digits) {
+            b = n;
+        }
+    }
+    if e.is_empty() {
+        if let Some(n) = check_e(dirty, &digits) {
+            e = n;
+        }
+    }
+    if g.is_empty() {
+        if let Some(n) = check_g(dirty, &digits, &a) {
+            g = n;
+        }
+    }
+    if d.is_empty() {
+        if let Some(n) = check_d(dirty, &digits, &a, &g) {
+            d = n;
+        }
+    }
+
+    if digits.contains(&4) {
+        let four = digits.iter().position(|&n| n == 4).unwrap();
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 6 && !a.is_empty() && !g.is_empty() {
+                let mut nine = true;
+                for c in dirty[four].chars() {
+                    if !digit.contains(c) {
+                        nine = false;
+                    }
+                }
+                if nine {
+                    digits[i] = 9;
+                }
+            }
+        }
+    }
+
+    if digits.contains(&8) {
+        let eight = digits.iter().position(|&n| n == 8).unwrap();
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 6 && !d.is_empty() {
+                let mut zero = true;
+                for c in dirty[eight].chars() {
+                    if !d.contains(c) && !digit.contains(c) {
+                        zero = false;
+                    }
+                }
+                if zero {
+                    digits[i] = 0;
+                }
+            }
+        }
+    }
+
+    if e.is_empty() {
+        if let Some(n) = check_e(dirty, &digits) {
+            e = n;
+        }
+    }
+
+    if !a.is_empty() && !b.is_empty() && !d.is_empty() && !e.is_empty() && !g.is_empty() {
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 6
+                && digit.contains(&a)
+                && digit.contains(&b)
+                && digit.contains(&d)
+                && digit.contains(&e)
+                && digit.contains(&g)
+            {
+                digits[i] = 6;
+                for c in digit.chars() {
+                    if !a.contains(c) && !b.contains(c) && !d.contains(c) && !e.contains(c) && !g.contains(c) {
+                        f = c.into();
+                    }
+                }
+            }
+        }
+    }
+
+    if digits.contains(&1) && !f.is_empty() {
+        let one = digits.iter().position(|&n| n == 1).unwrap();
+        for ch in dirty[one].chars() {
+            if !f.contains(ch) {
+                c = ch.into();
+            }
+        }
+    }
+
+    if !a.is_empty() && !c.is_empty() && !d.is_empty() && !e.is_empty() && !g.is_empty() {
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 5
+                && digit.contains(&a)
+                && digit.contains(&c)
+                && digit.contains(&d)
+                && digit.contains(&e)
+                && digit.contains(&g)
+            {
+                digits[i] = 2;
+            }
+        }
+    }
+
+    if !a.is_empty() && !b.is_empty() && !d.is_empty() && !f.is_empty() && !g.is_empty() {
+        for (i, digit) in dirty.iter().enumerate() {
+            if digit.len() == 5
+                && digit.contains(&a)
+                && digit.contains(&b)
+                && digit.contains(&d)
+                && digit.contains(&f)
+                && digit.contains(&g)
+            {
+                digits[i] = 5;
+            }
+        }
+    }
+
+    /*
+    if !a.is_empty() { println!("a = {}", a) };
+    if !b.is_empty() { println!("b = {}", b) };
+    if !c.is_empty() { println!("c = {}", c) };
+    if !d.is_empty() { println!("d = {}", d) };
+    if !e.is_empty() { println!("e = {}", e) };
+    if !f.is_empty() { println!("f = {}", f) };
+    if !g.is_empty() { println!("g = {}", g) };
+    */
+    //println!("digits = {:?}", digits);
+    digits[10..].to_vec()
+}
+
+fn get_segment_msg(data: &str) -> Vec<String> {
+    data.split_whitespace()
+        .filter(|s| *s != "|")
+        .map(|s| s.trim().parse::<String>().unwrap())
+        .map(|s| s.chars().sorted().collect::<String>())
+        .collect::<Vec<String>>()
+}
+
+#[allow(unused_variables)]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[derive(StructOpt)]
+    #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
+    struct Cli {
+        #[structopt(
+            short,
+            long,
+            parse(from_os_str),
+            help = "file|stdin -- line containing comma separated positions"
+        )]
+        input: Option<std::path::PathBuf>,
+    }
+    let args = Cli::from_args();
+
+    // ==============================================================
+
+    let data = read_data_lines::<String>(args.input)?;
+    let digits = data
+        .iter()
+        .map(|line| get_segment_msg(line))
+        .collect::<Vec<Vec<String>>>();
+
+    //println!("msg = {:?}", digits[0]);
+    let mut digit_counts = Counter::<u8, usize>::new();
+    let mut n = 0;
+    for d in digits {
+        let msg = get_solution1(&d);
+        n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+        digit_counts += msg;
+    }
+    //println!("counts = {:?}", digit_counts);
+
+    println!(
+        "Answer Part 1 = {}",
+        digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8]
+    );
+
+    println!("Answer Part 2 = {}", n);
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn datapoints(filename: &str) -> Vec<Vec<String>> {
+        let file = Some(std::path::PathBuf::from(filename));
+        let data = read_data_lines::<String>(file).unwrap();
+        data.iter()
+            .map(|line| get_segment_msg(line))
+            .collect::<Vec<Vec<String>>>()
+    }
+
+    #[test]
+    fn part1_example() {
+        let data = datapoints("input-example");
+        let mut digit_counts = Counter::<u8, usize>::new();
+        for d in data {
+            digit_counts += get_solution1(&d);
+        }
+        assert_eq!(
+            digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8],
+            26
+        );
+    }
+
+    #[test]
+    fn part1_actual() {
+        let data = datapoints("input-actual");
+        let mut digit_counts = Counter::<u8, usize>::new();
+        for d in data {
+            digit_counts += get_solution1(&d);
+        }
+        assert_eq!(
+            digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8],
+            445
+        );
+    }
+
+    #[test]
+    fn part2_example() {
+        let data = datapoints("input-example");
+        let mut n = 0;
+        for d in data {
+            let msg = get_solution1(&d);
+            n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+        }
+        assert_eq!(n, 61229);
+    }
+
+    #[test]
+    fn part2_actual() {
+        let data = datapoints("input-actual");
+        let mut n = 0;
+        for d in data {
+            let msg = get_solution1(&d);
+            n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+        }
+        assert_eq!(n, 1043101);
+    }
+}
