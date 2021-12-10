@@ -27,8 +27,7 @@ fn get_heatmap(data: &[String]) -> Array2<u32> {
 }
 
 fn get_lowpoints(heatmap: &Array2<u32>) -> Vec<(usize, usize)> {
-    let nrow = heatmap.nrows();
-    let ncol = heatmap.ncols();
+    let (nrow, ncol) = (heatmap.nrows(), heatmap.ncols());
 
     let is_lowpoint = |r, c, n| {
         (r == 0 || heatmap[[r - 1, c]] > n)
