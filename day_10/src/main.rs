@@ -54,7 +54,6 @@ fn get_solutions(data: &[String]) -> (u64, u64) {
     )
 }
 
-#[allow(unused_variables)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
@@ -72,7 +71,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ==============================================================
 
     let data = read_data_lines::<String>(args.input)?;
-
     let (p1, p2) = get_solutions(&data);
     println!("Answer Part 1 = {}", p1);
     println!("Answer Part 2 = {}", p2);
@@ -83,32 +81,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 mod tests {
     use super::*;
 
-    fn datapoints(filename: &str) -> Vec<String> {
+    fn get_data(filename: &str) -> Vec<String> {
         let file = Some(std::path::PathBuf::from(filename));
         read_data_lines::<String>(file).unwrap()
     }
 
     #[test]
     fn part1_example() {
-        let data = datapoints("input-example");
+        let data = get_data("input-example");
         assert_eq!(get_solutions(&data).0, 26397);
     }
 
     #[test]
     fn part1_actual() {
-        let data = datapoints("input-actual");
+        let data = get_data("input-actual");
         assert_eq!(get_solutions(&data).0, 464991);
     }
 
     #[test]
     fn part2_example() {
-        let data = datapoints("input-example");
+        let data = get_data("input-example");
         assert_eq!(get_solutions(&data).1, 288957);
     }
 
     #[test]
     fn part2_actual() {
-        let data = datapoints("input-actual");
+        let data = get_data("input-actual");
         assert_eq!(get_solutions(&data).1, 3662008566);
     }
 }

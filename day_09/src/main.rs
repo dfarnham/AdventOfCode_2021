@@ -99,7 +99,6 @@ fn get_solution2(heatmap: &Array2<u32>) -> u32 {
     basin_sizes.iter().take(3).product::<usize>() as u32
 }
 
-#[allow(unused_variables)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]

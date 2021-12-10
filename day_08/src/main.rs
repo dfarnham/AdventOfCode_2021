@@ -105,7 +105,6 @@ fn get_segment_msg(data: &str) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-#[allow(unused_variables)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
