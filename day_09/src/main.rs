@@ -96,7 +96,8 @@ fn get_solution2(heatmap: &Array2<u32>) -> u32 {
     assert!(basin_sizes.len() > 2);
     basin_sizes.sort_by(|a, b| b.cmp(a));
     //(basin_sizes[0] * basin_sizes[1] * basin_sizes[2]) as u32
-    basin_sizes.iter().take(3).fold(1, |acc, x| acc * x) as u32
+    //basin_sizes.iter().take(3).fold(1, |acc, x| acc * x) as u32
+    basin_sizes.iter().take(3).product::<usize>() as u32
 }
 
 #[allow(unused_variables)]
