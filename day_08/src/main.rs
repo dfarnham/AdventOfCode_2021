@@ -101,8 +101,7 @@ fn get_solution(garbled: &[String]) -> Vec<u8> {
 fn get_segment_msg(data: &str) -> Vec<String> {
     data.split_whitespace()
         .filter(|s| *s != "|")
-        .map(|s| s.trim().parse::<String>().unwrap())
-        .map(|s| s.chars().sorted().collect::<String>())
+        .map(|s| s.trim().chars().sorted().collect::<String>())
         .collect::<Vec<String>>()
 }
 
