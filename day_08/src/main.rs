@@ -7,22 +7,28 @@ const PUZZLE_NAME: &str = "Advent of Code: Day 8 -- Version:";
 const PUZZLE_ABOUT: &str = "Seven Segment Search: https://adventofcode.com/2021/day/8";
 
 /*
-  0:        1:        2:        3:        4:        5:        6:        7:        8:        9:
- aaaa      ....      aaaa      aaaa      ....      aaaa      aaaa      aaaa      aaaa      aaaa
-b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
-b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
- ....      ....      dddd      dddd      dddd      dddd      dddd      ....      dddd      dddd
-e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
-e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
- gggg      ....      gggg      gggg      ....      gggg      gggg      ....      gggg      gggg
+      0:        1:        2:        3:        4:        5:        6:        7:        8:        9:
+     aaaa      ....      aaaa      aaaa      ....      aaaa      aaaa      aaaa      aaaa      aaaa
+    b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
+    b    c    .    c    .    c    .    c    b    c    b    .    b    .    .    c    b    c    b    c
+     ....      ....      dddd      dddd      dddd      dddd      dddd      ....      dddd      dddd
+    e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
+    e    f    .    f    e    .    .    f    .    f    .    f    e    f    .    f    e    f    .    f
+     gggg      ....      gggg      gggg      ....      gggg      gggg      ....      gggg      gggg
+
+Len   6         2         5         5         4         5         6         3         7         6
 */
 
-fn get_solution(dirty: &[String]) -> Vec<u8> {
+fn get_solution(garbled: &[String]) -> Vec<u8> {
     let mut digits = vec![u8::MAX; 14];
 
+    fn garbled_str(garbled: &[String], digits: &[u8], n: u8) -> String {
+        garbled[digits.iter().position(|&num| num == n).unwrap()].to_string()
+    }
+
     // find 1, 4, 7, 8
-    for (i, digit) in dirty.iter().enumerate() {
-        match digit.len() {
+    for (i, garb) in garbled.iter().enumerate() {
+        match garb.len() {
             2 => digits[i] = 1,
             3 => digits[i] = 7,
             4 => digits[i] = 4,
@@ -34,62 +40,38 @@ fn get_solution(dirty: &[String]) -> Vec<u8> {
     // known: 1, 4, 7, 8
     //
     // "3" is a digit.len() == 5 that contains the "1" chars
-    let s = &dirty[digits.iter().position(|&n| n == 1).unwrap()];
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 5 {
-            let mut found = true;
-            for c in s.chars() {
-                if !digit.contains(c) {
-                    found = false;
-                }
-            }
-            if found {
-                digits[i] = 3;
-            }
+    let s = garbled_str(garbled, &digits, 1);
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 5 && s.chars().filter(|c| garb.contains(*c)).count() == s.len() {
+            digits[i] = 3;
         }
     }
 
     // known: 1, 3, 4, 7, 8
     //
     // "9" is a digit.len() == 6 that contains the "3" chars
-    let s = &dirty[digits.iter().position(|&n| n == 3).unwrap()];
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 6 {
-            let mut found = true;
-            for c in s.chars() {
-                if !digit.contains(c) {
-                    found = false;
-                }
-            }
-            if found {
-                digits[i] = 9;
-            }
+    let s = garbled_str(garbled, &digits, 3);
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 6 && s.chars().filter(|c| garb.contains(*c)).count() == s.len() {
+            digits[i] = 9;
         }
     }
 
     // known: 1, 3, 4, 7, 8, 9
     //
     // "0" is a digit.len() == 6 that contains the "1" chars and is not the "9"
-    let s = &dirty[digits.iter().position(|&n| n == 1).unwrap()];
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 6 {
-            let mut found = true;
-            for c in s.chars() {
-                if !digit.contains(c) {
-                    found = false;
-                }
-            }
-            if found && digits[i] != 9 {
-                digits[i] = 0;
-            }
+    let s = garbled_str(garbled, &digits, 1);
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 6 && s.chars().filter(|c| garb.contains(*c)).count() == s.len() && digits[i] != 9 {
+            digits[i] = 0;
         }
     }
 
     // known: 0, 1, 3, 4, 7, 8, 9
     //
     // "6" is a digit.len() == 6 that is not 0, 9
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 6 && digits[i] != 0 && digits[i] != 9 {
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 6 && digits[i] != 0 && digits[i] != 9 {
             digits[i] = 6;
         }
     }
@@ -97,26 +79,18 @@ fn get_solution(dirty: &[String]) -> Vec<u8> {
     // known: 0, 1, 3, 4, 6, 7, 8, 9
     //
     // "5" is a digit.len() == 5 that is contained within a "6"
-    let s = &dirty[digits.iter().position(|&n| n == 6).unwrap()];
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 5 {
-            let mut found = true;
-            for c in digit.chars() {
-                if !s.contains(c) {
-                    found = false;
-                }
-            }
-            if found {
-                digits[i] = 5;
-            }
+    let s = garbled_str(garbled, &digits, 6);
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 5 && garb.chars().filter(|c| s.contains(*c)).count() == garb.len() {
+            digits[i] = 5;
         }
     }
 
     // known: 0, 1, 3, 4, 5, 6, 7, 8, 9
     //
     // "2" is a digit.len() == 5 that is not 3, 5
-    for (i, digit) in dirty.iter().enumerate() {
-        if digit.len() == 5 && digits[i] != 3 && digits[i] != 5 {
+    for (i, garb) in garbled.iter().enumerate() {
+        if garb.len() == 5 && digits[i] != 3 && digits[i] != 5 {
             digits[i] = 2;
         }
     }
