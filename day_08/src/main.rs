@@ -133,7 +133,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut n = 0;
     for d in digits {
         let msg = get_solution(&d);
-        n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+        // example: [3,4,5,6] into 3456
+        //n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+        n += msg.iter().fold(0, |acc, x| 10 * acc + *x as u32);
         digit_counts += msg;
     }
 
