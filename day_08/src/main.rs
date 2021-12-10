@@ -141,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Answer Part 1 = {}",
-        digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8]
+        [1, 4, 7, 8].iter().map(|n| digit_counts[n]).sum::<usize>()
     );
 
     println!("Answer Part 2 = {}", n);
@@ -167,10 +167,7 @@ mod tests {
         for d in data {
             digit_counts += get_solution(&d);
         }
-        assert_eq!(
-            digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8],
-            26
-        );
+        assert_eq!([1, 4, 7, 8].iter().map(|n| digit_counts[n]).sum::<usize>(), 26);
     }
 
     #[test]
@@ -180,10 +177,7 @@ mod tests {
         for d in data {
             digit_counts += get_solution(&d);
         }
-        assert_eq!(
-            digit_counts[&1] + digit_counts[&4] + digit_counts[&7] + digit_counts[&8],
-            445
-        );
+        assert_eq!([1, 4, 7, 8].iter().map(|n| digit_counts[n]).sum::<usize>(), 445);
     }
 
     #[test]
@@ -192,7 +186,7 @@ mod tests {
         let mut n = 0;
         for d in data {
             let msg = get_solution(&d);
-            n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+            n += msg.iter().fold(0, |acc, x| 10 * acc + *x as u32);
         }
         assert_eq!(n, 61229);
     }
@@ -203,7 +197,7 @@ mod tests {
         let mut n = 0;
         for d in data {
             let msg = get_solution(&d);
-            n += 1000 * msg[0] as u32 + 100 * msg[1] as u32 + 10 * msg[2] as u32 + msg[3] as u32;
+            n += msg.iter().fold(0, |acc, x| 10 * acc + *x as u32);
         }
         assert_eq!(n, 1043101);
     }
