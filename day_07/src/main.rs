@@ -13,15 +13,15 @@ fn get_solution2(data: &[u32]) -> (usize, u32) {
     let max = **counts.keys().max().expect("max() failure");
 
     let mut best: Option<(_, _)> = None;
-    let sum_to_n = |n: u32| n * (n + 1) / 2;
+    let sum_to_n = |n| (n * (n + 1) / 2) as usize;
     for pos in min..=max {
         let left_cost = (min..pos)
             .into_iter()
-            .map(|i| counts[&i] * sum_to_n(pos - i) as usize)
+            .map(|i| counts[&i] * sum_to_n(pos - i))
             .sum::<usize>();
         let right_cost = (pos..=max)
             .into_iter()
-            .map(|i| counts[&i] * sum_to_n(i - pos) as usize)
+            .map(|i| counts[&i] * sum_to_n(i - pos))
             .sum::<usize>();
         match left_cost + right_cost {
             n if best.is_none() || n < best.unwrap().0 => best = Some((n, pos)),
