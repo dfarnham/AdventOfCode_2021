@@ -1,5 +1,5 @@
 use general::read_data_lines;
-use ndarray::Array2;
+use ndarray::{s, Array2};
 use structopt::StructOpt;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 13 -- Version:";
@@ -16,8 +16,8 @@ fn get_data(data: &[String]) -> (Array2<u32>, Vec<i32>) {
                 let points = line
                     .trim()
                     .split(',')
-                    .map(|s| s.to_string().parse::<u32>().unwrap())
-                    .collect::<Vec<u32>>();
+                    .map(|s| s.to_string().parse::<usize>().unwrap())
+                    .collect::<Vec<usize>>();
                 assert_eq!(points.len(), 2, "expected 2 points: {:?}", points);
                 x.push(points[0]);
                 y.push(points[1]);
@@ -36,65 +36,49 @@ fn get_data(data: &[String]) -> (Array2<u32>, Vec<i32>) {
         }
     }
 
-    let xmax = *x.iter().max().expect("xmax failure") as usize;
-    let ymax = *y.iter().max().expect("ymax max failure") as usize;
+    let xmax = *x.iter().max().expect("xmax failure");
+    let ymax = *y.iter().max().expect("ymax max failure");
 
-    // The new Array2
-    let mut paper = Array2::zeros((1 + xmax, 1 + ymax));
+    // create a new Array2
+    let mut paper = Array2::zeros((xmax + 1, ymax + 1));
 
-    for (i, j) in x.iter().zip(y.iter()) {
-        paper[[*i as usize, *j as usize]] = 1;
+    for (i, j) in x.into_iter().zip(y.into_iter()) {
+        paper[[i, j]] = 1;
     }
     (paper, folds)
 }
 
-fn foldit(paper: &Array2<u32>, direction: i32) -> Array2<u32> {
-    // negative direction represent X
-    // positive direction represent Y
+fn fold_up(paper: &Array2<u32>, pos: usize) -> Array2<u32> {
+    // copy over elements from paper not being folded
+    let mut folded = paper
+        .slice(s![0..paper.nrows(), 0..pos.max(paper.ncols() - pos - 1)])
+        .to_owned();
 
-    let xpos = direction.abs() as usize;
-    let ypos = direction.abs() as usize;
+    // update with folded items from paper
+    // if the sum > 0 it is set to 1
+    for i in 0..folded.nrows() {
+        for (c, j) in ((pos + 1)..paper.ncols()).enumerate() {
+            let a = j - 2 - 2 * c;
+            folded[[i, a]] = 1.min(folded[[i, a]] + paper[[i, j]]);
+        }
+    }
+    folded
+}
 
-    let mut folded = match direction < 0 {
-        true => {
-            let sz = xpos.max(paper.nrows() - xpos - 1) as usize;
-            Array2::zeros((sz as usize, paper.ncols()))
-        }
-        false => {
-            let sz = ypos.max(paper.ncols() - ypos - 1) as usize;
-            Array2::zeros((paper.nrows(), sz as usize))
-        }
-    };
+fn fold_left(paper: &Array2<u32>, pos: usize) -> Array2<u32> {
+    // copy over elements from paper not being folded
+    let mut folded = paper
+        .slice(s![0..pos.max(paper.nrows() - pos - 1), 0..paper.ncols()])
+        .to_owned();
 
-    match direction < 0 {
-        true => {
-            for i in 0..xpos {
-                for j in 0..folded.ncols() {
-                    folded[[i, j]] = paper[[i, j]];
-                }
-            }
-            for (c, i) in ((xpos + 1)..paper.nrows()).enumerate() {
-                let a = i - 2 * c - 2;
-                for j in 0..folded.ncols() {
-                    folded[[a, j]] = 1.min(folded[[a, j]] + paper[[i, j]]);
-                }
-            }
+    // update with folded items from paper
+    // if the sum > 0 it is set to 1
+    for (c, i) in ((pos + 1)..paper.nrows()).enumerate() {
+        let a = i - 2 - 2 * c;
+        for j in 0..folded.ncols() {
+            folded[[a, j]] = 1.min(folded[[a, j]] + paper[[i, j]]);
         }
-        false => {
-            for i in 0..folded.nrows() {
-                for j in 0..ypos {
-                    folded[[i, j]] = paper[[i, j]];
-                }
-            }
-            for i in 0..folded.nrows() {
-                for (c, j) in ((ypos + 1)..paper.ncols()).enumerate() {
-                    let b = j - 2 * c - 2;
-                    folded[[i, b]] = 1.min(folded[[i, b]] + paper[[i, j]]);
-                }
-            }
-        }
-    };
-
+    }
     folded
 }
 
@@ -131,11 +115,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?;
     let (mut paper, instructions) = get_data(&data);
 
-    paper = foldit(&paper, instructions[0]);
+    // instructions are < 0 for "left", > 0 for "up"
+    for instruction in &instructions[0..1] {
+        paper = match instruction < &0 {
+            true => fold_left(&paper, instruction.abs() as usize),
+            false => fold_up(&paper, *instruction as usize),
+        };
+    }
+
     println!("Answer Part 1 = {}", paper.sum());
 
     for instruction in &instructions[1..] {
-        paper = foldit(&paper, *instruction);
+        paper = match instruction < &0 {
+            true => fold_left(&paper, instruction.abs() as usize),
+            false => fold_up(&paper, *instruction as usize),
+        };
     }
 
     print!("Answer Part 2 =\n{}", get_message(&paper));
@@ -156,7 +150,12 @@ mod tests {
     fn part1_example() {
         let data = get_testdata("input-example");
         let (mut paper, instructions) = get_data(&data);
-        paper = foldit(&paper, instructions[0]);
+        for instruction in &instructions[0..1] {
+            paper = match instruction < &0 {
+                true => fold_left(&paper, instruction.abs() as usize),
+                false => fold_up(&paper, *instruction as usize),
+            };
+        }
         assert_eq!(paper.sum(), 17);
     }
 
@@ -164,7 +163,12 @@ mod tests {
     fn part1_actual() {
         let data = get_testdata("input-actual");
         let (mut paper, instructions) = get_data(&data);
-        paper = foldit(&paper, instructions[0]);
+        for instruction in &instructions[0..1] {
+            paper = match instruction < &0 {
+                true => fold_left(&paper, instruction.abs() as usize),
+                false => fold_up(&paper, *instruction as usize),
+            };
+        }
         assert_eq!(paper.sum(), 790);
     }
 
@@ -173,7 +177,10 @@ mod tests {
         let data = get_testdata("input-example");
         let (mut paper, instructions) = get_data(&data);
         for instruction in &instructions {
-            paper = foldit(&paper, *instruction);
+            paper = match instruction < &0 {
+                true => fold_left(&paper, instruction.abs() as usize),
+                false => fold_up(&paper, *instruction as usize),
+            };
         }
         let message = get_message(&paper);
         let expected = "#####\n#   #\n#   #\n#   #\n#####\n     \n     \n";
@@ -185,7 +192,10 @@ mod tests {
         let data = get_testdata("input-actual");
         let (mut paper, instructions) = get_data(&data);
         for instruction in &instructions {
-            paper = foldit(&paper, *instruction);
+            paper = match instruction < &0 {
+                true => fold_left(&paper, instruction.abs() as usize),
+                false => fold_up(&paper, *instruction as usize),
+            };
         }
         let message = get_message(&paper);
         let expected = "###   ##  #  # #### ###  ####   ##  ##  \n#  # #  # #  #    # #  # #       # #  # \n#  # #    ####   #  ###  ###     # #    \n###  # ## #  #  #   #  # #       # #    \n#    #  # #  # #    #  # #    #  # #  # \n#     ### #  # #### ###  #     ##   ##  \n";
