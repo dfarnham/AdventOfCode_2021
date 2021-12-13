@@ -1,5 +1,11 @@
 #!/bin/sh
 
+echo "========== CHECK =========="
+cargo check
+
+echo "========== CLIPPY =========="
+cargo clippy
+
 echo "========== TESTS =========="
 for day in day*
 do
