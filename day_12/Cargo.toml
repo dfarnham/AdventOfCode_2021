@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 general = { path = "../general" }
-itertools = "0.10.3"
 structopt = "0.3.25"

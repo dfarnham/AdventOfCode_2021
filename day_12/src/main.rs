@@ -1,13 +1,11 @@
 use general::read_data_lines;
-use itertools::Itertools;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use structopt::StructOpt;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 12 -- Version:";
 const PUZZLE_ABOUT: &str = "Passage Pathing: https://adventofcode.com/2021/day/12";
 
-fn get_graph(data: &[String]) -> HashMap<String, HashSet<String>> {
+fn get_graph(data: &[String]) -> BTreeMap<String, HashSet<String>> {
     // parsing rules for data[String]
     // Example:
     //   "start-A",
@@ -27,7 +25,7 @@ fn get_graph(data: &[String]) -> HashMap<String, HashSet<String>> {
     //      "end": {"A", "b"},
     //   }
 
-    let mut graph = HashMap::new();
+    let mut graph = BTreeMap::new();
     for s in data.iter() {
         let nodes = s.trim().split('-').map(|s| s.to_string()).collect::<Vec<String>>();
         assert_eq!(nodes.len(), 2, "expected 2 nodes: {:?}", nodes);
@@ -47,11 +45,11 @@ fn is_small(s: &str) -> bool {
 }
 
 fn visit(
-    graph: &HashMap<String, HashSet<String>>,
+    graph: &BTreeMap<String, HashSet<String>>,
     node: &str,
     special: &str,
     max_count: usize,
-    visited: &mut HashMap<String, usize>,
+    visited: &mut BTreeMap<String, usize>,
     paths: &mut Vec<String>,
     solutions: &mut HashSet<Vec<String>>,
 ) {
@@ -86,11 +84,11 @@ fn visit(
     }
 }
 
-fn solution(graph: &HashMap<String, HashSet<String>>, count: usize) -> usize {
-    let mut visited = HashMap::<String, usize>::new();
+fn solution(graph: &BTreeMap<String, HashSet<String>>, count: usize) -> usize {
+    let mut visited = BTreeMap::<String, usize>::new();
     let mut paths = vec![];
     let mut solutions = HashSet::<Vec<String>>::new();
-    for k in graph.keys().sorted() {
+    for k in graph.keys() {
         if is_small(k) && k != "start" && k != "end" {
             visit(graph, "start", k, count, &mut visited, &mut paths, &mut solutions);
         }
