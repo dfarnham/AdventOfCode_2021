@@ -42,10 +42,15 @@ fn get_graph(data: &[String]) -> HashMap<String, HashSet<String>> {
     graph
 }
 
-fn visit2(
+fn is_small(s: &str) -> bool {
+    s.to_lowercase() == s
+}
+
+fn visit(
     graph: &HashMap<String, HashSet<String>>,
     node: &str,
     special: &str,
+    max_count: usize,
     visited: &mut HashMap<String, usize>,
     paths: &mut Vec<String>,
     solutions: &mut HashSet<Vec<String>>,
@@ -56,76 +61,41 @@ fn visit2(
         return;
     }
 
-    if node.to_lowercase() == node {
+    if is_small(node) {
         let count = visited.entry(node.to_string()).or_insert(0);
         *count += 1;
     }
 
-    if let Some(items) = graph.get(node) {
-        for item in items {
-            if !visited.contains_key(item) || (item == special && visited.get(special) < Some(&2)) {
-                paths.push(item.to_string());
-                visit2(graph, item, special, visited, paths, solutions);
-                paths.pop();
-                if visited.contains_key(item) {
-                    let count = visited.get_mut(item).unwrap();
-                    *count -= 1;
-                    if *count == 0 {
-                        visited.remove(item);
+    match graph.get(node) {
+        Some(items) => {
+            for item in items {
+                if !visited.contains_key(item) || (item == special && visited.get(special) < Some(&max_count)) {
+                    paths.push(item.to_string());
+                    visit(graph, item, special, max_count, visited, paths, solutions);
+                    paths.pop();
+                    if let Some(count) = visited.get_mut(item) {
+                        *count -= 1;
+                        if *count == 0 {
+                            visited.remove(item);
+                        }
                     }
                 }
             }
         }
+        None => panic!("{}", format!("expected node = {} to be in graph", node)),
     }
 }
 
-fn solution2(graph: &HashMap<String, HashSet<String>>) -> usize {
+fn solution(graph: &HashMap<String, HashSet<String>>, count: usize) -> usize {
     let mut visited = HashMap::<String, usize>::new();
     let mut paths = vec![];
     let mut solutions = HashSet::<Vec<String>>::new();
     for k in graph.keys().sorted() {
-        if &k.to_lowercase() == k && k != "end" {
-            visit2(graph, "start", k, &mut visited, &mut paths, &mut solutions);
+        if is_small(k) && k != "start" && k != "end" {
+            visit(graph, "start", k, count, &mut visited, &mut paths, &mut solutions);
         }
     }
     solutions.len()
-}
-
-fn visit1(
-    graph: &HashMap<String, HashSet<String>>,
-    node: &str,
-    visited: &mut HashSet<String>,
-    paths: &mut Vec<String>,
-    solutions: &mut usize,
-) {
-    if node == "end" {
-        //println!("paths = {:?}", paths);
-        *solutions += 1;
-        return;
-    }
-
-    if node.to_lowercase() == node {
-        visited.insert(node.to_string());
-    }
-
-    if let Some(items) = graph.get(node) {
-        for item in items {
-            if !visited.contains(item) {
-                paths.push(item.to_string());
-                visit1(graph, item, visited, paths, solutions);
-                paths.pop();
-                visited.remove(item);
-            }
-        }
-    }
-}
-
-fn solution1(graph: &HashMap<String, HashSet<String>>) -> usize {
-    let mut visited = HashSet::<String>::new();
-    let mut paths = vec![];
-    let mut solutions = 0;
-    visit1(graph, "start", &mut visited, &mut paths, &mut solutions);
-    solutions
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -147,8 +117,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?;
     let graph = get_graph(&data);
     //println!("graph = {:?}", graph);
-    println!("Answer Part 1 = {}", solution1(&graph));
-    println!("Answer Part 2 = {}", solution2(&graph));
+    println!("Answer Part 1 = {}", solution(&graph, 1));
+    println!("Answer Part 2 = {}", solution(&graph, 2));
     Ok(())
 }
 
@@ -165,55 +135,55 @@ mod tests {
     fn part1_example() {
         let data = get_data("input-example");
         let graph = get_graph(&data);
-        assert_eq!(solution1(&graph), 10);
+        assert_eq!(solution(&graph, 1), 10);
     }
 
     #[test]
     fn part1_example2() {
         let data = get_data("input-example2");
         let graph = get_graph(&data);
-        assert_eq!(solution1(&graph), 19);
+        assert_eq!(solution(&graph, 1), 19);
     }
 
     #[test]
     fn part1_example3() {
         let data = get_data("input-example3");
         let graph = get_graph(&data);
-        assert_eq!(solution1(&graph), 226);
+        assert_eq!(solution(&graph, 1), 226);
     }
 
     #[test]
     fn part1_actual() {
         let data = get_data("input-actual");
         let graph = get_graph(&data);
-        assert_eq!(solution1(&graph), 4186);
+        assert_eq!(solution(&graph, 1), 4186);
     }
 
     #[test]
     fn part2_example() {
         let data = get_data("input-example");
         let graph = get_graph(&data);
-        assert_eq!(solution2(&graph), 36);
+        assert_eq!(solution(&graph, 2), 36);
     }
 
     #[test]
     fn part2_example2() {
         let data = get_data("input-example2");
         let graph = get_graph(&data);
-        assert_eq!(solution2(&graph), 103);
+        assert_eq!(solution(&graph, 2), 103);
     }
 
     #[test]
     fn part2_example3() {
         let data = get_data("input-example3");
         let graph = get_graph(&data);
-        assert_eq!(solution2(&graph), 3509);
+        assert_eq!(solution(&graph, 2), 3509);
     }
 
     #[test]
     fn part2_actual() {
         let data = get_data("input-actual");
         let graph = get_graph(&data);
-        assert_eq!(solution2(&graph), 92111);
+        assert_eq!(solution(&graph, 2), 92111);
     }
 }
