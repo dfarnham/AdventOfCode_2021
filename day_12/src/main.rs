@@ -88,9 +88,13 @@ fn solution(graph: &BTreeMap<String, HashSet<String>>, count: usize) -> usize {
     let mut visited = BTreeMap::<String, usize>::new();
     let mut paths = vec![];
     let mut solutions = HashSet::<Vec<String>>::new();
-    for k in graph.keys() {
-        if is_small(k) && k != "start" && k != "end" {
-            visit(graph, "start", k, count, &mut visited, &mut paths, &mut solutions);
+    if count == 1 {
+        visit(graph, "start", "end", count, &mut visited, &mut paths, &mut solutions);
+    } else {
+        for k in graph.keys() {
+            if is_small(k) && k != "start" && k != "end" {
+                visit(graph, "start", k, count, &mut visited, &mut paths, &mut solutions);
+            }
         }
     }
     solutions.len()
