@@ -43,64 +43,70 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-#[should_panic]
-fn empty_array() {
-    let measurements = vec![];
-    let window = 1;
-    count_window_increase(&measurements, window);
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-#[should_panic]
-fn array_too_small() {
-    let measurements = vec![199];
-    let window = 1;
-    count_window_increase(&measurements, window);
-}
+    fn get_data(filename: &str) -> Vec<i32> {
+        let file = Some(std::path::PathBuf::from(filename));
+        read_data_lines::<i32>(file).unwrap()
+    }
 
-#[test]
-#[should_panic]
-fn invalid_window() {
-    let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
-    let window = 0;
-    count_window_increase(&measurements, window);
-}
+    #[test]
+    #[should_panic]
+    fn empty_array() {
+        let measurements = vec![];
+        let window = 1;
+        count_window_increase(&measurements, window);
+    }
 
-#[test]
-fn part1_example() {
-    let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
-    let window = 1;
-    assert_eq!(count_window_increase(&measurements, window), 7);
+    #[test]
+    #[should_panic]
+    fn array_too_small() {
+        let measurements = vec![199];
+        let window = 1;
+        count_window_increase(&measurements, window);
+    }
 
-    let file = Some(std::path::PathBuf::from("input-example"));
-    let measurements = read_data_lines::<i32>(file).unwrap();
-    assert_eq!(count_window_increase(&measurements, window), 7);
-}
+    #[test]
+    #[should_panic]
+    fn invalid_window() {
+        let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+        let window = 0;
+        count_window_increase(&measurements, window);
+    }
 
-#[test]
-fn part2_example() {
-    let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
-    let window = 3;
-    assert_eq!(count_window_increase(&measurements, window), 5);
+    #[test]
+    fn part1_example() {
+        let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+        let window = 1;
+        assert_eq!(count_window_increase(&measurements, window), 7);
 
-    let file = Some(std::path::PathBuf::from("input-example"));
-    let measurements = read_data_lines::<i32>(file).unwrap();
-    assert_eq!(count_window_increase(&measurements, window), 5);
-}
+        let measurements = get_data("input-example");
+        assert_eq!(count_window_increase(&measurements, window), 7);
+    }
 
-#[test]
-fn part1_actual() {
-    let file = Some(std::path::PathBuf::from("input-actual"));
-    let measurements = read_data_lines::<i32>(file).unwrap();
-    let window = 1;
-    assert_eq!(count_window_increase(&measurements, window), 1233);
-}
+    #[test]
+    fn part2_example() {
+        let measurements = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+        let window = 3;
+        assert_eq!(count_window_increase(&measurements, window), 5);
 
-#[test]
-fn part2_actual() {
-    let file = Some(std::path::PathBuf::from("input-actual"));
-    let measurements = read_data_lines::<i32>(file).unwrap();
-    let window = 3;
-    assert_eq!(count_window_increase(&measurements, window), 1275);
+        let measurements = get_data("input-example");
+        assert_eq!(count_window_increase(&measurements, window), 5);
+    }
+
+    #[test]
+    fn part1_actual() {
+        let measurements = get_data("input-actual");
+        let window = 1;
+        assert_eq!(count_window_increase(&measurements, window), 1233);
+    }
+
+    #[test]
+    fn part2_actual() {
+        let measurements = get_data("input-actual");
+        let window = 3;
+        assert_eq!(count_window_increase(&measurements, window), 1275);
+    }
 }
