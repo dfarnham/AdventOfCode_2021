@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             short,
             long,
             parse(from_os_str),
-            help = "file|stdin -- lines of open/close delimiter characters"
+            help = "file|stdin -- puzzle input"
         )]
         input: Option<std::path::PathBuf>,
     }

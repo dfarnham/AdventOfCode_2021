@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             short,
             long,
             parse(from_os_str),
-            help = "file|stdin -- line segment endpoints, one per line"
+            help = "file|stdin -- puzzle input"
         )]
         input: Option<std::path::PathBuf>,
     }

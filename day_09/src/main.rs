@@ -107,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             short,
             long,
             parse(from_os_str),
-            help = "file|stdin -- lines of garbled display segments"
+            help = "file|stdin -- puzzle input"
         )]
         input: Option<std::path::PathBuf>,
     }
