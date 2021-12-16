@@ -21,7 +21,7 @@ for day in day*
 do
     cd "$day"
     echo $day
-    cargo run -- -i input-example
+    cargo run --release -- -i input-example
     cd ..
     echo "--------------------"
 done
@@ -31,7 +31,7 @@ for day in day*
 do
     cd "$day"
     echo $day
-    cargo run -- -i input-actual
+    cargo run --release -- -i input-actual
     cd ..
     echo "--------------------"
 done
