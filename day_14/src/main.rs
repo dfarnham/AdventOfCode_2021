@@ -62,7 +62,7 @@ fn solution(start: &str, productions: &HashMap<String, String>, steps: usize) ->
 
     // sort and return: most frequent - least frequent
     let by_common = cntr.most_common_ordered();
-    by_common[0].1 - by_common[by_common.len() - 1].1
+    by_common.first().unwrap().1 - by_common.last().unwrap().1
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

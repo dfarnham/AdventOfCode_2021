@@ -11,7 +11,7 @@ for day in day*
 do
     cd "$day"
     echo $day
-    cargo test
+    cargo test --release
     cd ..
     echo "--------------------"
 done
