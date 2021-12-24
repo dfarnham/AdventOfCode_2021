@@ -4,8 +4,8 @@ use structopt::StructOpt;
 const PUZZLE_NAME: &str = "Advent of Code: Day 16 -- Version:";
 const PUZZLE_ABOUT: &str = "Packet Decoder: https://adventofcode.com/2021/day/16";
 
-const MIN_PACKET_BITS: usize = 11;
 const PACKET_HEADER: usize = 6;
+const MIN_PACKET_BITS: usize = 11; // PACKET_HEADER + 5-bit NUM
 
 // Literal value packets encode a single binary number.
 // To do this, the binary number is padded with leading zeroes until its length is a multiple of four bits,
@@ -13,7 +13,6 @@ const PACKET_HEADER: usize = 6;
 // which is prefixed by a 0 bit. These groups of five bits immediately follow the packet header.
 // For example, the hexadecimal string D2FE28 becomes:
 //
-//         0111  1110  0101
 // 110100 10111 11110 00101000
 // VVVTTT AAAAA BBBBB CCCCC
 //
@@ -55,6 +54,27 @@ const PACKET_HEADER: usize = 6;
 //     The 16 bits labeled B contain the second sub-packet, a literal value representing the number 20.
 //
 // After reading 11 and 16 bits of sub-packet data, the total length indicated in L (27) is reached, and so parsing of this packet stops.
+//
+// Literal values (type ID 4) represent a single number as described above. The remaining type IDs are more interesting:
+//
+//   Packets with type ID 0 are sum packets - their value is the sum of the values of their sub-packets.
+//   If they only have a single sub-packet, their value is the value of the sub-packet.
+//
+//   Packets with type ID 1 are product packets - their value is the result of multiplying together the values of their sub-packets.
+//   If they only have a single sub-packet, their value is the value of the sub-packet.
+//
+//   Packets with type ID 2 are minimum packets - their value is the minimum of the values of their sub-packets.
+//
+//   Packets with type ID 3 are maximum packets - their value is the maximum of the values of their sub-packets.
+//
+//   Packets with type ID 5 are greater than packets - their value is 1 if the value of the first sub-packet is greater than
+//   the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+//
+//   Packets with type ID 6 are less than packets - their value is 1 if the value of the first sub-packet is less than the value
+//   of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+//
+//   Packets with type ID 7 are equal to packets - their value is 1 if the value of the first sub-packet is equal to the value of
+//   the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
 
 #[derive(Debug, PartialEq)]
 struct Packet {
@@ -88,45 +108,58 @@ pub enum Payload {
     SubPacketLen(usize), // number of following packets
 }
 
-fn decode_packet(bits: &[u8]) -> Packet {
-    let version = bits2num(bits, 0, 3) as u8;
-    let type_id = bits2num(bits, 3, 3) as u8;
+fn bits2num(bits: &[u8]) -> u64 {
+    bits.iter().fold(0, |acc, b| acc << 1 | *b as u64)
+}
 
-    // temporary assignment, set when type_id == 4
-    let mut literal_num = Op::NUM(0);
-    let id = match type_id == 4 {
-        true => {
+fn decode_packet(bits: &[u8]) -> Packet {
+    let version = bits2num(&bits[0..3]) as u8;
+    let type_id = bits2num(&bits[3..6]) as u8;
+
+    let opcode = match type_id {
+        0 => Op::SUM,
+        1 => Op::PROD,
+        2 => Op::MIN,
+        3 => Op::MAX,
+        4 => Op::NUM(0), // set below
+        5 => Op::GT,
+        6 => Op::LT,
+        7 => Op::EQ,
+        _ => panic!("invalid type_id = {}", type_id),
+    };
+
+    let (op, id) = match opcode {
+        Op::NUM(_) => {
             let mut nibbles = vec![];
             for (i, bit) in bits.iter().skip(PACKET_HEADER).enumerate() {
                 if i % 5 == 0 {
                     if *bit == 0 {
-                        nibbles.extend(&bits[(i + PACKET_HEADER + 1)..(i + PACKET_HEADER + 5)]);
+                        // last 4 bits
+                        nibbles.extend(&bits[(i + PACKET_HEADER + 1)..=(i + PACKET_HEADER + 4)]);
                         break;
                     }
-                    continue;
+                    continue; // skip every 5th bit
                 }
                 nibbles.push(*bit);
             }
-            literal_num = Op::NUM(bits2num(&nibbles, 0, nibbles.len()));
-            TypeId::Literal(nibbles.len() + nibbles.len() / 4)
+            (
+                Op::NUM(bits2num(&nibbles)),
+                TypeId::Literal(nibbles.len() + nibbles.len() / 4),
+            )
         }
-        false => match bits[PACKET_HEADER] == 0 {
-            true => TypeId::Operator(Payload::BitLen(bits2num(bits, PACKET_HEADER + 1, 15) as usize)),
-            false => TypeId::Operator(Payload::SubPacketLen(bits2num(bits, PACKET_HEADER + 1, 11) as usize)),
-        },
-    };
-
-    let op = match id {
-        TypeId::Literal(_) => literal_num,
-        TypeId::Operator(_) => match type_id {
-            0 => Op::SUM,
-            1 => Op::PROD,
-            2 => Op::MIN,
-            3 => Op::MAX,
-            5 => Op::GT,
-            6 => Op::LT,
-            7 => Op::EQ,
-            _ => panic!("invalid type_id = {}", type_id),
+        _ => match bits[PACKET_HEADER] == 0 {
+            true => (
+                opcode,
+                TypeId::Operator(Payload::BitLen(
+                    bits2num(&bits[(PACKET_HEADER + 1)..=(PACKET_HEADER + 15)]) as usize,
+                )),
+            ),
+            false => (
+                opcode,
+                TypeId::Operator(Payload::SubPacketLen(
+                    bits2num(&bits[(PACKET_HEADER + 1)..=(PACKET_HEADER + 11)]) as usize,
+                )),
+            ),
         },
     };
 
@@ -150,25 +183,21 @@ fn get_packets(bits: &[u8]) -> Vec<Packet> {
     let mut offset = 0;
     let mut packets = vec![];
     while offset + MIN_PACKET_BITS <= bits.len() {
-        let pack = decode_packet(&bits[offset..]);
-        offset += match pack.id {
+        let packet = decode_packet(&bits[offset..]);
+        offset += match packet.id {
             TypeId::Literal(n) => PACKET_HEADER + n,
-            TypeId::Operator(Payload::BitLen(n)) => PACKET_HEADER + 16 + n,
+            TypeId::Operator(Payload::BitLen(n)) => PACKET_HEADER + n + 16,
             TypeId::Operator(Payload::SubPacketLen(_)) => PACKET_HEADER + 12,
         };
-        packets.push(pack);
+        packets.push(packet);
     }
     packets
 }
 
-fn bits2num(bits: &[u8], index: usize, n: usize) -> u64 {
-    bits.iter().skip(index).take(n).fold(0, |acc, b| acc << 1 | *b as u64)
-}
-
 fn get_bits(msg: &str) -> Vec<u8> {
-    let mut bits = Vec::<u8>::new();
+    let mut bits = vec![];
     for c in msg.chars() {
-        let nibble = u8::from_str_radix(&c.to_string(), 16).unwrap();
+        let nibble = u8::from_str_radix(&c.to_string(), 16).expect("hex conversion failed");
         bits.push(nibble >> 3 & 1);
         bits.push(nibble >> 2 & 1);
         bits.push(nibble >> 1 & 1);
@@ -177,14 +206,14 @@ fn get_bits(msg: &str) -> Vec<u8> {
     bits
 }
 
-fn operator_value(op: &Op, values: &[u64]) -> u64 {
+fn apply_operator(op: &Op, values: &[u64]) -> u64 {
     let mut stack = values.to_vec();
 
     match op {
         Op::SUM => stack.iter().sum::<u64>(),
         Op::PROD => stack.iter().product::<u64>(),
-        Op::MIN => *stack.iter().min().unwrap(),
-        Op::MAX => *stack.iter().max().unwrap(),
+        Op::MIN => *stack.iter().min().expect("min() failed"),
+        Op::MAX => *stack.iter().max().expect("max() failed"),
         Op::GT => match stack.pop() < stack.pop() {
             true => 1,
             false => 0,
@@ -197,7 +226,7 @@ fn operator_value(op: &Op, values: &[u64]) -> u64 {
             true => 1,
             false => 0,
         },
-        _ => panic!("operator_value"),
+        _ => panic!("invalid opcode = {:?}", op),
     }
 }
 
@@ -219,24 +248,24 @@ fn eval(packets: &[Packet]) -> Vec<u64> {
     let mut stack = Vec::<u64>::new();
     let mut index = 0;
     while index < packets.len() {
-        match &packets[index].id {
+        let opcode = &packets[index].op;
+        match packets[index].id {
             TypeId::Literal(_) => {
-                let num = match packets[index].op {
-                    Op::NUM(n) => n,
-                    _ => panic!("Literal Op = {:?}", packets[index].op),
-                };
-                stack.push(num);
+                stack.push(match opcode {
+                    Op::NUM(n) => *n,
+                    _ => panic!("Literal Op must be type Op::NUM, op = {:?}", opcode),
+                });
             }
             TypeId::Operator(Payload::BitLen(_)) => {
-                stack.push(operator_value(
-                    &packets[index].op,
-                    &eval(packets[index].sub_packets.as_ref().unwrap()),
+                stack.push(apply_operator(
+                    opcode,
+                    &eval(packets[index].sub_packets.as_ref().expect("corrupt Payload::BitLen")),
                 ));
             }
             TypeId::Operator(Payload::SubPacketLen(n)) => {
-                let count = packets_needed(*n, &packets[(index + 1)..]);
-                stack.push(operator_value(
-                    &packets[index].op,
+                let count = packets_needed(n, &packets[(index + 1)..]);
+                stack.push(apply_operator(
+                    opcode,
                     &eval(&packets[(index + 1)..(index + 1 + count)]),
                 ));
                 index += count;
@@ -276,7 +305,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?;
     let bits = get_bits(&data[0]);
     let packets = get_packets(&bits);
-    //println!("main packets = {:#?}", packets);
+    println!("main packets = {:#?}", packets);
     println!("Answer Part 1 = {:?}", solution1(&packets));
     println!("Answer Part 2 = {:?}", solution2(&packets));
 
@@ -290,6 +319,176 @@ mod tests {
     fn get_data(filename: &str) -> Vec<String> {
         let file = Some(std::path::PathBuf::from(filename));
         read_data_lines::<String>(file).unwrap()
+    }
+    #[test]
+    fn test1() {
+        let data = "C200B40A82";
+        let bits = get_bits(data);
+        let packets = get_packets(&bits);
+
+        assert_eq!(packets.len(), 3);
+        assert_eq!(
+            packets[0],
+            Packet {
+                version: 6,
+                id: TypeId::Operator(Payload::SubPacketLen(2)),
+                op: Op::SUM,
+                sub_packets: None
+            }
+        );
+        assert_eq!(
+            packets[1],
+            Packet {
+                version: 6,
+                id: TypeId::Literal(5),
+                op: Op::NUM(1),
+                sub_packets: None
+            }
+        );
+        assert_eq!(
+            packets[2],
+            Packet {
+                version: 2,
+                id: TypeId::Literal(5),
+                op: Op::NUM(2),
+                sub_packets: None
+            }
+        );
+
+        assert_eq!(solution1(&packets), 6 + 6 + 2);
+        assert_eq!(solution2(&packets), 1 + 2);
+    }
+
+    #[test]
+    fn test2() {
+        let data = "04005AC33890";
+        let bits = get_bits(data);
+        let packets = get_packets(&bits);
+
+        assert_eq!(packets.len(), 1);
+        assert_eq!(
+            packets[0],
+            Packet {
+                version: 0,
+                id: TypeId::Operator(Payload::BitLen(22)),
+                op: Op::PROD,
+                sub_packets: Some(vec![
+                    Packet {
+                        version: 5,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(6),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 3,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(9),
+                        sub_packets: None
+                    },
+                ])
+            }
+        );
+
+        assert_eq!(solution1(&packets), 5 + 3);
+        assert_eq!(solution2(&packets), 6 * 9);
+    }
+
+    #[test]
+    fn test3() {
+        let data = "9C0141080250320F1802104A08";
+        let bits = get_bits(data);
+        let packets = get_packets(&bits);
+
+        assert_eq!(packets.len(), 1);
+        assert_eq!(
+            packets[0],
+            Packet {
+                version: 4,
+                id: TypeId::Operator(Payload::BitLen(80)),
+                op: Op::EQ,
+                sub_packets: Some(vec![
+                    Packet {
+                        version: 2,
+                        id: TypeId::Operator(Payload::SubPacketLen(2)),
+                        op: Op::SUM,
+                        sub_packets: None,
+                    },
+                    Packet {
+                        version: 2,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(1),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 4,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(3),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 6,
+                        id: TypeId::Operator(Payload::SubPacketLen(2)),
+                        op: Op::PROD,
+                        sub_packets: None,
+                    },
+                    Packet {
+                        version: 0,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(2),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 2,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(2),
+                        sub_packets: None
+                    },
+                ])
+            }
+        );
+
+        assert_eq!(solution1(&packets), 4 + 2 + 2 + 4 + 6 + 0 + 2);
+        assert_eq!(solution2(&packets), 1);
+    }
+
+    #[test]
+    fn test4() {
+        let data = "880086C3E88112";
+        let bits = get_bits(data);
+        let packets = get_packets(&bits);
+
+        assert_eq!(packets.len(), 1);
+        assert_eq!(
+            packets[0],
+            Packet {
+                version: 4,
+                id: TypeId::Operator(Payload::BitLen(33)),
+                op: Op::MIN,
+                sub_packets: Some(vec![
+                    Packet {
+                        version: 5,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(7),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 6,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(8),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 0,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(9),
+                        sub_packets: None
+                    },
+                ])
+            }
+        );
+
+        assert_eq!(solution1(&packets), 4 + 5 + 6 + 0);
+        assert_eq!(solution2(&packets), *[7, 8, 9].iter().min().unwrap());
     }
 
     #[test]

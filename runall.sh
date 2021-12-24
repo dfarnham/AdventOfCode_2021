@@ -1,5 +1,7 @@
 #!/bin/sh
 
+inputs="input-example input-actual"
+
 echo "========== CHECK =========="
 cargo check
 
@@ -9,29 +11,18 @@ cargo clippy
 echo "========== TESTS =========="
 for day in day*
 do
-    cd "$day"
-    echo $day
-    cargo test --release
-    cd ..
+    echo cargo test --bin "$day" --release
+    cargo test --bin "$day" --release
     echo "--------------------"
 done
 
-echo "========== EXAMPLE =========="
-for day in day*
+for input in $inputs
 do
-    cd "$day"
-    echo $day
-    cargo run --release -- -i input-example
-    cd ..
-    echo "--------------------"
-done
-
-echo "========== ACTUAL =========="
-for day in day*
-do
-    cd "$day"
-    echo $day
-    cargo run --release -- -i input-actual
-    cd ..
-    echo "--------------------"
+    echo "========== INPUT FILES =========="
+    for day in day*
+    do
+        echo cargo run --bin "$day" --release -- -i "$day/$input"
+        cargo run --bin "$day" --release -- -i "$day/$input"
+        echo "--------------------"
+    done
 done
