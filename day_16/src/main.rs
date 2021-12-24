@@ -305,7 +305,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?;
     let bits = get_bits(&data[0]);
     let packets = get_packets(&bits);
-    //println!("main packets = {:#?}", packets);
+    //println!("packets = {:#?}", packets);
     println!("Answer Part 1 = {:?}", solution1(&packets));
     println!("Answer Part 2 = {:?}", solution2(&packets));
 
@@ -489,6 +489,40 @@ mod tests {
 
         assert_eq!(solution1(&packets), 4 + 5 + 6 + 0);
         assert_eq!(solution2(&packets), *[7, 8, 9].iter().min().unwrap());
+    }
+
+    #[test]
+    fn test5() {
+        let data = "38006F45291200";
+        let bits = get_bits(data);
+        let packets = get_packets(&bits);
+
+        assert_eq!(packets.len(), 1);
+        assert_eq!(
+            packets[0],
+            Packet {
+                version: 1,
+                id: TypeId::Operator(Payload::BitLen(27)),
+                op: Op::LT,
+                sub_packets: Some(vec![
+                    Packet {
+                        version: 6,
+                        id: TypeId::Literal(5),
+                        op: Op::NUM(10),
+                        sub_packets: None
+                    },
+                    Packet {
+                        version: 2,
+                        id: TypeId::Literal(10),
+                        op: Op::NUM(20),
+                        sub_packets: None
+                    },
+                ])
+            }
+        );
+
+        assert_eq!(solution1(&packets), 1 + 6 + 2);
+        assert_eq!(solution2(&packets), 1);
     }
 
     #[test]
