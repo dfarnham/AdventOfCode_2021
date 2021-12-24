@@ -305,7 +305,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?;
     let bits = get_bits(&data[0]);
     let packets = get_packets(&bits);
-    println!("main packets = {:#?}", packets);
+    //println!("main packets = {:#?}", packets);
     println!("Answer Part 1 = {:?}", solution1(&packets));
     println!("Answer Part 2 = {:?}", solution2(&packets));
 
