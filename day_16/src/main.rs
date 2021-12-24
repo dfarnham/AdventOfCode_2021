@@ -57,19 +57,21 @@ const PACKET_HEADER: usize = 6;
 // After reading 11 and 16 bits of sub-packet data, the total length indicated in L (27) is reached, and so parsing of this packet stops.
 
 #[derive(Debug, PartialEq)]
-pub enum Payload {
-    BitLen(usize),
-    SubPacketLen(usize),
+struct Packet {
+    version: u8,
+    id: TypeId,
+    op: Op,
+    sub_packets: Option<Vec<Packet>>,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum TypeId {
-    Literal,
+    Literal(usize), // number of bits to encode NUM
     Operator(Payload),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Representation {
+pub enum Op {
     NUM(u64),
     SUM,
     PROD,
@@ -80,32 +82,20 @@ pub enum Representation {
     EQ,
 }
 
-type Value = Representation;
-
 #[derive(Debug, PartialEq)]
-struct P {
-    version: u8, // 3 bit number
-    type_id: u8, // 3 bit number which determins TypeId
-    id: TypeId,  // Literal if type_id == 4, otherwise an Operator Packet determined by the next bit
-    value: Representation,
-    literal_len: usize,
-    sub_packets: Option<Vec<P>>,
+pub enum Payload {
+    BitLen(usize),       // number of bits in embedded packet
+    SubPacketLen(usize), // number of following packets
 }
 
-fn decode_packet(bits: &[u8]) -> P {
+fn decode_packet(bits: &[u8]) -> Packet {
     let version = bits2num(bits, 0, 3) as u8;
     let type_id = bits2num(bits, 3, 3) as u8;
-    let id = match type_id == 4 {
-        true => TypeId::Literal,
-        false => match bits[PACKET_HEADER] == 0 {
-            true => TypeId::Operator(Payload::BitLen(bits2num(bits, PACKET_HEADER + 1, 15) as usize)),
-            false => TypeId::Operator(Payload::SubPacketLen(bits2num(bits, PACKET_HEADER + 1, 11) as usize)),
-        },
-    };
 
-    let mut literal_len = 0;
-    let value = match id {
-        TypeId::Literal => {
+    // temporary assignment, set when type_id == 4
+    let mut literal_num = Op::NUM(0);
+    let id = match type_id == 4 {
+        true => {
             let mut nibbles = vec![];
             for (i, bit) in bits.iter().skip(PACKET_HEADER).enumerate() {
                 if i % 5 == 0 {
@@ -117,51 +107,54 @@ fn decode_packet(bits: &[u8]) -> P {
                 }
                 nibbles.push(*bit);
             }
-            literal_len = nibbles.len() + nibbles.len() / 4;
-            //println!("decode literal = {}", bits2num(&nibbles, 0, nibbles.len()));
-            Value::NUM(bits2num(&nibbles, 0, nibbles.len()))
+            literal_num = Op::NUM(bits2num(&nibbles, 0, nibbles.len()));
+            TypeId::Literal(nibbles.len() + nibbles.len() / 4)
         }
-        TypeId::Operator(ref _payload) => match type_id {
-            0 => Value::SUM,
-            1 => Value::PROD,
-            2 => Value::MIN,
-            3 => Value::MAX,
-            5 => Value::GT,
-            6 => Value::LT,
-            7 => Value::EQ,
-            _ => panic!("unknow type_id"),
+        false => match bits[PACKET_HEADER] == 0 {
+            true => TypeId::Operator(Payload::BitLen(bits2num(bits, PACKET_HEADER + 1, 15) as usize)),
+            false => TypeId::Operator(Payload::SubPacketLen(bits2num(bits, PACKET_HEADER + 1, 11) as usize)),
         },
     };
 
-    let sub_packets: Option<Vec<P>> = match id {
-        TypeId::Literal => None,
-        TypeId::Operator(ref payload) => match payload {
-            Payload::BitLen(n) => Some(get_packets(&bits[(PACKET_HEADER + 16)..(PACKET_HEADER + 16 + n)])),
-            Payload::SubPacketLen(_) => None,
+    let op = match id {
+        TypeId::Literal(_) => literal_num,
+        TypeId::Operator(_) => match type_id {
+            0 => Op::SUM,
+            1 => Op::PROD,
+            2 => Op::MIN,
+            3 => Op::MAX,
+            5 => Op::GT,
+            6 => Op::LT,
+            7 => Op::EQ,
+            _ => panic!("invalid type_id = {}", type_id),
         },
     };
 
-    P {
+    let sub_packets: Option<Vec<Packet>> = match id {
+        TypeId::Literal(_) => None,
+        TypeId::Operator(Payload::SubPacketLen(_)) => None,
+        TypeId::Operator(Payload::BitLen(n)) => {
+            Some(get_packets(&bits[(PACKET_HEADER + 16)..(PACKET_HEADER + 16 + n)]))
+        }
+    };
+
+    Packet {
         version,
-        type_id,
         id,
-        value,
-        literal_len,
+        op,
         sub_packets,
     }
 }
 
-fn get_packets(bits: &[u8]) -> Vec<P> {
+fn get_packets(bits: &[u8]) -> Vec<Packet> {
     let mut offset = 0;
     let mut packets = vec![];
     while offset + MIN_PACKET_BITS <= bits.len() {
         let pack = decode_packet(&bits[offset..]);
         offset += match pack.id {
-            TypeId::Literal => PACKET_HEADER + pack.literal_len,
-            TypeId::Operator(ref payload) => match payload {
-                Payload::BitLen(n) => PACKET_HEADER + 16 + n,
-                Payload::SubPacketLen(_) => PACKET_HEADER + 12,
-            },
+            TypeId::Literal(n) => PACKET_HEADER + n,
+            TypeId::Operator(Payload::BitLen(n)) => PACKET_HEADER + 16 + n,
+            TypeId::Operator(Payload::SubPacketLen(_)) => PACKET_HEADER + 12,
         };
         packets.push(pack);
     }
@@ -184,23 +177,23 @@ fn get_bits(msg: &str) -> Vec<u8> {
     bits
 }
 
-fn operator_value(op: &Value, nums: &[u64]) -> u64 {
-    let mut e = nums.to_vec();
+fn operator_value(op: &Op, values: &[u64]) -> u64 {
+    let mut stack = values.to_vec();
 
     match op {
-        Value::SUM => e.iter().sum::<u64>(),
-        Value::PROD => e.iter().product::<u64>(),
-        Value::MIN => *e.iter().min().unwrap(),
-        Value::MAX => *e.iter().max().unwrap(),
-        Value::GT => match e.pop() < e.pop() {
+        Op::SUM => stack.iter().sum::<u64>(),
+        Op::PROD => stack.iter().product::<u64>(),
+        Op::MIN => *stack.iter().min().unwrap(),
+        Op::MAX => *stack.iter().max().unwrap(),
+        Op::GT => match stack.pop() < stack.pop() {
             true => 1,
             false => 0,
         },
-        Value::LT => match e.pop() > e.pop() {
+        Op::LT => match stack.pop() > stack.pop() {
             true => 1,
             false => 0,
         },
-        Value::EQ => match e.pop() == e.pop() {
+        Op::EQ => match stack.pop() == stack.pop() {
             true => 1,
             false => 0,
         },
@@ -208,65 +201,53 @@ fn operator_value(op: &Value, nums: &[u64]) -> u64 {
     }
 }
 
-fn packets_needed(n: usize, p: &[P]) -> usize {
-    let mut count = 0;
-    for packet in p.iter().take(n) {
-        match packet.id {
-            TypeId::Literal => {
-                count += 1;
-            }
-            TypeId::Operator(ref payload) => match payload {
-                Payload::BitLen(_) => {
-                    count += 1;
-                }
-                Payload::SubPacketLen(c) => {
-                    count += 1 + c;
-                }
-            },
+// counts the actual number of packets needed for an input packet range
+// taking into account SubPacketLen packets extend the count
+fn packets_needed(n: usize, packets: &[Packet]) -> usize {
+    let mut target = n;
+    let mut index = 0;
+    while index < target {
+        if let TypeId::Operator(Payload::SubPacketLen(c)) = packets[index].id {
+            target += c;
         }
+        index += 1;
     }
-    match count > n {
-        true => n + packets_needed(count - n, &p[n..]),
-        false => n,
-    }
+    index
 }
 
-fn eval(p: &[P]) -> Vec<u64> {
+fn eval(packets: &[Packet]) -> Vec<u64> {
     let mut stack = Vec::<u64>::new();
     let mut index = 0;
-    while index < p.len() {
-        match &p[index].id {
-            TypeId::Literal => {
-                let num = match p[index].value {
-                    Value::NUM(n) => n,
-                    _ => panic!("literal num"),
+    while index < packets.len() {
+        match &packets[index].id {
+            TypeId::Literal(_) => {
+                let num = match packets[index].op {
+                    Op::NUM(n) => n,
+                    _ => panic!("Literal Op = {:?}", packets[index].op),
                 };
                 stack.push(num);
-                index += 1;
             }
-            TypeId::Operator(ref payload) => match payload {
-                Payload::BitLen(_) => {
-                    stack.push(operator_value(
-                        &p[index].value,
-                        &eval(p[index].sub_packets.as_ref().unwrap()),
-                    ));
-                    index += 1;
-                }
-                Payload::SubPacketLen(n) => {
-                    let count = packets_needed(*n, &p[(index + 1)..]);
-                    stack.push(operator_value(
-                        &p[index].value,
-                        &eval(&p[(index + 1)..(index + 1 + count)]),
-                    ));
-                    index += 1 + count;
-                }
-            },
+            TypeId::Operator(Payload::BitLen(_)) => {
+                stack.push(operator_value(
+                    &packets[index].op,
+                    &eval(packets[index].sub_packets.as_ref().unwrap()),
+                ));
+            }
+            TypeId::Operator(Payload::SubPacketLen(n)) => {
+                let count = packets_needed(*n, &packets[(index + 1)..]);
+                stack.push(operator_value(
+                    &packets[index].op,
+                    &eval(&packets[(index + 1)..(index + 1 + count)]),
+                ));
+                index += count;
+            }
         };
+        index += 1;
     }
     stack
 }
 
-fn solution1(packets: &[P]) -> u64 {
+fn solution1(packets: &[Packet]) -> u64 {
     let mut total = 0;
     for p in packets.iter() {
         total += p.version as u64;
@@ -277,7 +258,7 @@ fn solution1(packets: &[P]) -> u64 {
     total
 }
 
-fn solution2(packets: &[P]) -> u64 {
+fn solution2(packets: &[Packet]) -> u64 {
     eval(packets)[0]
 }
 
