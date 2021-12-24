@@ -245,7 +245,7 @@ fn packets_needed(n: usize, packets: &[Packet]) -> usize {
 }
 
 fn eval(packets: &[Packet]) -> Vec<u64> {
-    let mut stack = Vec::<u64>::new();
+    let mut stack = vec![];
     let mut index = 0;
     while index < packets.len() {
         let opcode = &packets[index].op;
