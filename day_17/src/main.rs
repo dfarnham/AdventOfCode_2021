@@ -23,7 +23,7 @@ fn solutions(data: &str) -> (i64, usize) {
     let mut best_y = i64::MIN;
     let mut velocity = HashSet::new();
 
-    for n in 0..=xmax {
+    for n in ((2.0 * xmin as f64).sqrt().round() as i64)..=xmax {
         for m in ymin..ymin.abs() {
             let (mut x, mut y) = (0, 0);
             let (mut xv, mut yv) = (n as i64, m as i64);
