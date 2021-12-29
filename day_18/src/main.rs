@@ -86,7 +86,7 @@ fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
 
     if n[0].is_array() {
         if let Some(pair) = explode_it(&mut n[0], depth + 1) {
-            if depth == 3 {
+            if depth == MAX_DEPTH - 1 {
                 n[0] = 0.into();
             }
 
@@ -104,7 +104,7 @@ fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
 
     if n[1].is_array() {
         if let Some(pair) = explode_it(&mut n[1], depth + 1) {
-            if depth == 3 {
+            if depth == MAX_DEPTH - 1 {
                 n[1] = 0.into();
             }
 
