@@ -8,6 +8,8 @@ extern crate json;
 // a lot of Json clone() and &mut reference passing in this one
 //
 // using json::JsonValue for the abstraction to represent a Snail Number (see type below)
+// a SnailNum is a pair -- a 2 element vector: [ SnailNum[0], SnailNum[1] ]
+//
 // the subset of JsonValue used to test for a number, list, or create a list
 //    JsonValue.is_number()
 //    JsonValue.is_array()
