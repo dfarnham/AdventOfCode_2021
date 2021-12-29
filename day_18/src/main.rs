@@ -8,10 +8,10 @@ extern crate json;
 // a lot of Json clone() and &mut reference passing in this one
 //
 // using json::JsonValue for the abstraction to represent a Snail Number (see type below)
-// the below subset of JsonValue is used to test for a number, list, or extract a number
+// the subset of JsonValue used to test for a number, list, or create a list
 //    JsonValue.is_number()
 //    JsonValue.is_array()
-//    jint(JsonValue::Number) -> u64
+//    macro array![] to create a new list
 
 type SnailNum = json::JsonValue;
 
@@ -19,6 +19,7 @@ const PUZZLE_NAME: &str = "Advent of Code: Day 18 -- Version:";
 const PUZZLE_ABOUT: &str = "Snailfish: https://adventofcode.com/2021/day/18";
 const MAX_DEPTH: usize = 4;
 
+// consume the input data, returning a Vec of SnailNum
 fn get_data(data: &[String]) -> Vec<SnailNum> {
     let mut nums = vec![];
     for line in data {
@@ -66,6 +67,9 @@ fn split(n: &mut SnailNum) -> bool {
     false
 }
 
+// helper to add a value to a number
+//   i == 0 (left)
+//   i == 1 (right)
 fn add_to_nearest(n: &mut SnailNum, i: usize, val: u64) {
     if n[i].is_number() {
         n[i] = (jint(&n[i]) + val).into();
@@ -157,6 +161,7 @@ fn magnitude(n: &SnailNum) -> u64 {
     }
 }
 
+// add 2 Snail Numbers and return the reduced number
 fn add_reduce(a: &SnailNum, b: &SnailNum) -> SnailNum {
     let mut add = array![a.clone(), b.clone()];
     reduce(&mut add);
