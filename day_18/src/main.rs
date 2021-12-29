@@ -7,6 +7,11 @@ extern crate json;
 //
 // a lot of Json clone() and &mut reference passing in this one
 //
+// using json::JsonValue for the abstraction to represent a Snail Number (see type below)
+// the below subset of JsonValue is used to test for a number, list, or extract a number
+//    JsonValue.is_number()
+//    JsonValue.is_array()
+//    jint(JsonValue::Number) -> u64
 
 type SnailNum = json::JsonValue;
 
@@ -17,7 +22,7 @@ const MAX_DEPTH: usize = 4;
 fn get_data(data: &[String]) -> Vec<SnailNum> {
     let mut nums = vec![];
     for line in data {
-        nums.push(json::parse(line).unwrap())
+        nums.push(json::parse(line).expect("unparsable SnailNum"));
     }
     nums
 }
@@ -33,11 +38,16 @@ fn jint(n: &json::JsonValue) -> u64 {
     }
 }
 
+// To split a regular number, replace it with a pair; the left element of the pair
+// should be the regular number divided by two and rounded down, while the right
+// element of the pair should be the regular number divided by two and rounded up.
+// For example, 10 becomes [5,5], 11 becomes [5,6], 12 becomes [6,6], and so on.
 fn split_values(n: u64) -> SnailNum {
     let x = (n as f64) / 2.0;
     array![x.floor(), x.ceil()]
 }
 
+// If any regular number is 10 or greater, the leftmost such regular number splits.
 fn split(n: &mut SnailNum) -> bool {
     for i in 0..=1 {
         if n[i].is_array() {
@@ -64,6 +74,11 @@ fn add_to_nearest(n: &mut SnailNum, i: usize, val: u64) {
     }
 }
 
+// To explode a pair, the pair's left value is added to the first regular number
+// to the left of the exploding pair (if any), and the pair's right value is added
+// to the first regular number to the right of the exploding pair (if any).
+// Exploding pairs will always consist of two regular numbers. Then, the entire
+// exploding pair is replaced with the regular number 0.
 fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
     if depth == MAX_DEPTH && n[0].is_number() && n[1].is_number() {
         return Some((jint(&n[0]), jint(&n[1])));
@@ -108,10 +123,22 @@ fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
     None
 }
 
+// If any pair is nested inside four pairs, the leftmost such pair explodes.
 fn explode(n: &mut SnailNum) {
     while explode_it(n, 0).is_some() {}
 }
 
+// To reduce a snailfish number, you must repeatedly do the first action
+// in this list that applies to the snailfish number:
+//
+//   If any pair is nested inside four pairs, the leftmost such pair explodes.
+//   If any regular number is 10 or greater, the leftmost such regular number splits.
+//
+// Once no action in the above list applies, the snailfish number is reduced.
+//
+// During reduction, at most one action applies, after which the process returns
+// to the top of the list of actions. For example, if split produces a pair that
+// meets the explode criteria, that pair explodes before other splits occur.
 fn reduce(n: &mut SnailNum) {
     loop {
         explode(n);
@@ -121,17 +148,19 @@ fn reduce(n: &mut SnailNum) {
     }
 }
 
-fn add_reduce(a: &SnailNum, b: &SnailNum) -> SnailNum {
-    let mut add = array![a.clone(), b.clone()];
-    reduce(&mut add);
-    add.clone()
-}
-
+// The magnitude of a pair is 3 times the magnitude of its left element plus 2 times the
+// magnitude of its right element. The magnitude of a regular number is just that number.
 fn magnitude(n: &SnailNum) -> u64 {
     match n.is_number() {
         true => jint(n),
         false => 3 * magnitude(&n[0]) + 2 * magnitude(&n[1]),
     }
+}
+
+fn add_reduce(a: &SnailNum, b: &SnailNum) -> SnailNum {
+    let mut add = array![a.clone(), b.clone()];
+    reduce(&mut add);
+    add.clone()
 }
 
 fn solution1(nums: &[SnailNum]) -> u64 {
