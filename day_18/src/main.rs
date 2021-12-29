@@ -4,10 +4,15 @@ use structopt::StructOpt;
 #[macro_use]
 extern crate json;
 
+//
+// a lot of Json clone() and &mut reference passing in this one
+//
+
 type SnailNum = json::JsonValue;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 18 -- Version:";
 const PUZZLE_ABOUT: &str = "Snailfish: https://adventofcode.com/2021/day/18";
+const MAX_DEPTH: usize = 4;
 
 fn get_data(data: &[String]) -> Vec<SnailNum> {
     let mut nums = vec![];
@@ -17,72 +22,51 @@ fn get_data(data: &[String]) -> Vec<SnailNum> {
     nums
 }
 
-fn jnum(n: &json::JsonValue) -> u64 {
+// return the JsonValue as an unsigned integer
+fn jint(n: &json::JsonValue) -> u64 {
     match *n {
         json::JsonValue::Number(x) => {
             let f: f64 = x.into();
-            f.round() as u64
+            f as u64
         }
-        _ => panic!("not a Number"),
+        _ => panic!("{}", format!("{}: not a JsonValue::Number", n.dump())),
     }
 }
 
-fn magnitude(n: &SnailNum) -> u64 {
-    match n.is_number() {
-        true => jnum(n),
-        false => 3 * magnitude(&n[0]) + 2 * magnitude(&n[1]),
-    }
+fn split_values(n: u64) -> SnailNum {
+    let x = (n as f64) / 2.0;
+    array![x.floor(), x.ceil()]
 }
 
 fn split(n: &mut SnailNum) -> bool {
-    if n[0].is_array() {
-        if split(&mut n[0]) {
-            return true;
-        }
-    } else {
-        let x = jnum(&n[0]);
-        if x > 9 {
-            let x = (x as f64) / 2.0;
-            n[0] = array![x.floor(), x.ceil()];
-            return true;
-        }
-    }
-
-    if n[1].is_array() {
-        if split(&mut n[1]) {
-            return true;
-        }
-    } else {
-        let x = jnum(&n[1]);
-        if x > 9 {
-            let x = (x as f64) / 2.0;
-            n[1] = array![x.floor(), x.ceil()];
-            return true;
+    for i in 0..=1 {
+        if n[i].is_array() {
+            if split(&mut n[i]) {
+                return true;
+            }
+        } else {
+            let x = jint(&n[i]);
+            if x > 9 {
+                n[i] = split_values(x);
+                return true;
+            }
         }
     }
 
     false
 }
 
-fn add_l(n: &mut SnailNum, val: u64) {
-    if n[0].is_number() {
-        n[0] = (jnum(&n[0]) + val).into();
+fn add_to_nearest(n: &mut SnailNum, i: usize, val: u64) {
+    if n[i].is_number() {
+        n[i] = (jint(&n[i]) + val).into();
     } else {
-        add_l(&mut n[0], val);
-    }
-}
-
-fn add_r(n: &mut SnailNum, val: u64) {
-    if n[1].is_number() {
-        n[1] = (jnum(&n[1]) + val).into();
-    } else {
-        add_r(&mut n[1], val);
+        add_to_nearest(&mut n[i], i, val);
     }
 }
 
 fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
-    if depth == 4 && n[0].is_number() && n[1].is_number() {
-        return Some((jnum(&n[0]), jnum(&n[1])));
+    if depth == MAX_DEPTH && n[0].is_number() && n[1].is_number() {
+        return Some((jint(&n[0]), jint(&n[1])));
     }
 
     if n[0].is_array() {
@@ -93,9 +77,9 @@ fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
 
             // add pair.1 to the 1st pair.0 found in n[1]
             if n[1].is_array() {
-                add_l(&mut n[1], pair.1);
+                add_to_nearest(&mut n[1], 0, pair.1);
             } else {
-                n[1] = (jnum(&n[1]) + pair.1).into();
+                n[1] = (jint(&n[1]) + pair.1).into();
             }
 
             // pair.1 has just been added, zero it for subsequent additions
@@ -111,9 +95,9 @@ fn explode_it(n: &mut SnailNum, depth: usize) -> Option<(u64, u64)> {
 
             // add pair.0 to the 1st pair.1 found in n[0]
             if n[0].is_array() {
-                add_r(&mut n[0], pair.0);
+                add_to_nearest(&mut n[0], 1, pair.0);
             } else {
-                n[0] = (jnum(&n[0]) + pair.0).into();
+                n[0] = (jint(&n[0]) + pair.0).into();
             }
 
             // pair.0 has just been added, zero it for subsequent additions
@@ -137,23 +121,29 @@ fn reduce(n: &mut SnailNum) {
     }
 }
 
-fn solution1(nums: &[SnailNum]) -> u64 {
-    let mut sum = nums[0].clone();
-    for n in &nums[1..] {
-        sum = array![sum.clone(), n.clone()];
-        reduce(&mut sum);
+fn add_reduce(a: &SnailNum, b: &SnailNum) -> SnailNum {
+    let mut add = array![a.clone(), b.clone()];
+    reduce(&mut add);
+    add.clone()
+}
+
+fn magnitude(n: &SnailNum) -> u64 {
+    match n.is_number() {
+        true => jint(n),
+        false => 3 * magnitude(&n[0]) + 2 * magnitude(&n[1]),
     }
-    magnitude(&sum)
+}
+
+fn solution1(nums: &[SnailNum]) -> u64 {
+    magnitude(&nums.iter().skip(1).fold(nums[0].clone(), |acc, n| add_reduce(&acc, n)))
 }
 
 fn solution2(nums: &[SnailNum]) -> u64 {
     let mut best = 0;
-    for a in &nums[..] {
-        for b in &nums[..] {
+    for a in nums {
+        for b in nums {
             if a != b {
-                let mut sum = array![a.clone(), b.clone()];
-                reduce(&mut sum);
-                best = best.max(magnitude(&sum));
+                best = best.max(magnitude(&add_reduce(a, b)));
             }
         }
     }
