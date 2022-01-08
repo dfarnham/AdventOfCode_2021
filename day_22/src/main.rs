@@ -101,7 +101,8 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
         let (mut bymin, mut bymax) = b.yrange;
         let (bzmin, bzmax) = b.zrange;
 
-        if axmin > bxmin && axmin <= bxmax {
+        // vertical slices
+        if axmin > bxmin {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (bxmin, axmin - 1),
@@ -110,7 +111,7 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
             });
             bxmin = axmin;
         }
-        if axmax < bxmax && axmax >= bxmin {
+        if axmax < bxmax {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (axmax + 1, bxmax),
@@ -120,7 +121,8 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
             bxmax = axmax;
         }
 
-        if aymin > bymin && aymin <= bymax {
+        // horizontal slices
+        if aymin > bymin {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (bxmin, bxmax),
@@ -129,7 +131,7 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
             });
             bymin = aymin;
         }
-        if aymax < bymax && aymax >= bymin {
+        if aymax < bymax {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (bxmin, bxmax),
@@ -139,7 +141,8 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
             bymax = aymax;
         }
 
-        if azmin > bzmin && aymin <= bymax {
+        // depth slices
+        if azmin > bzmin {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (bxmin, bxmax),
@@ -147,7 +150,7 @@ fn split(a: &Cuboid, b: &Cuboid) -> Vec<Cuboid> {
                 zrange: (bzmin, azmin - 1),
             });
         }
-        if azmax < bzmax && azmax >= bzmin {
+        if azmax < bzmax {
             cub.push(Cuboid {
                 state: b.state,
                 xrange: (bxmin, bxmax),
