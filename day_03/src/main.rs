@@ -15,7 +15,7 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     let mut epsilon = 0;
 
     let nbits = nbits(data);
-    let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<u32>>();
+    let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<_>>();
     for mask in masks.iter() {
         let count = data.par_iter().filter(|n| (*n & mask) == *mask).count();
         // are there more bits "on" than "off" in this position?
@@ -27,12 +27,13 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     (gamma, epsilon)
 }
 
-fn mask_data(data: &[u32], mask: u32) -> (Vec<u32>, Vec<u32>) {
-    assert!(mask != 0, "mask == 0, data = {:?}", data);
+fn mask_data<T>(data: &[T], mask: T) -> (Vec<T>, Vec<T>)
+where T: std::cmp::PartialEq + Copy + std::ops::BitAnd<Output = T>
+{
     let mut masked = vec![];
     let mut unmasked = vec![];
     for n in data.iter() {
-        match (n & mask) == mask {
+        match (*n & mask) == mask {
             true => masked.push(*n),
             false => unmasked.push(*n),
         }
@@ -91,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = read_data_lines::<String>(args.input)?
         .iter()
         .map(|s| u32::from_str_radix(s, 2).unwrap())
-        .collect::<Vec<u32>>();
+        .collect::<Vec<_>>();
 
     let (gamma, epsilon) = get_gamma_epsilon(&data);
     //println!("gamma = {}, epsilon = {}", gamma, epsilon);
@@ -113,7 +114,7 @@ mod tests {
             .unwrap()
             .iter()
             .map(|s| u32::from_str_radix(s, 2).unwrap())
-            .collect::<Vec<u32>>();
+            .collect::<Vec<_>>();
         data
     }
 

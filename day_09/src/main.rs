@@ -11,7 +11,7 @@ fn get_heatmap(data: &[String]) -> Array2<u32> {
     let get_row = |s: &str| {
         s.chars()
             .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>()
+            .collect::<Vec<_>>()
     };
 
     // use data[0] to size the new Array2
@@ -80,7 +80,7 @@ fn get_solution1(heatmap: &Array2<u32>) -> u32 {
     get_lowpoints(heatmap)
         .iter()
         .map(|(r, c)| heatmap[[*r, *c]] + 1)
-        .sum::<u32>()
+        .sum::<_>()
 }
 
 fn get_solution2(heatmap: &Array2<u32>) -> u32 {

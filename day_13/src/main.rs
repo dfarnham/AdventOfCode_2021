@@ -17,7 +17,7 @@ fn get_data(data: &[String]) -> (Array2<u32>, Vec<i32>) {
                     .trim()
                     .split(',')
                     .map(|s| s.to_string().parse::<usize>().unwrap())
-                    .collect::<Vec<usize>>();
+                    .collect::<Vec<_>>();
                 assert_eq!(points.len(), 2, "expected 2 points: {:?}", points);
                 x.push(points[0]);
                 y.push(points[1]);

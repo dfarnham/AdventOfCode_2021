@@ -1,4 +1,5 @@
 use general::read_data_lines;
+use num::Num;
 use structopt::StructOpt;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 1 -- Version:";
@@ -6,7 +7,10 @@ const PUZZLE_ABOUT: &str = "Sonar Sweep: https://adventofcode.com/2021/day/1";
 
 // Given an input array:
 // Count the number of times the sum of measurements in a provided sliding window increases
-fn count_window_increase(array: &[i32], window: usize) -> usize {
+fn count_window_increase<'a, T>(array: &'a [T], window: usize) -> usize
+where
+    T: Num + std::cmp::PartialOrd + std::iter::Sum<&'a T>,
+{
     assert!(window > 0, "Window must be > 0");
     assert!(
         array.len() > window,
@@ -17,7 +21,7 @@ fn count_window_increase(array: &[i32], window: usize) -> usize {
 
     (0..(array.len() - window))
         .into_iter()
-        .filter(|&i| array[i..(i + window)].iter().sum::<i32>() < array[(i + 1)..=(i + window)].iter().sum::<i32>())
+        .filter(|&i| array[i..(i + window)].iter().sum::<T>() < array[(i + 1)..=(i + window)].iter().sum::<T>())
         .count()
 }
 
@@ -25,19 +29,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
     #[structopt(name = PUZZLE_NAME, about = PUZZLE_ABOUT)]
     struct Cli {
-        #[structopt(
-            short,
-            long,
-            parse(from_os_str),
-            help = "file|stdin -- puzzle input"
-        )]
+        #[structopt(short, long, parse(from_os_str), help = "file|stdin -- puzzle input")]
         input: Option<std::path::PathBuf>,
     }
     let args = Cli::from_args();
 
     // ==============================================================
 
-    let measurements = read_data_lines::<i32>(args.input)?;
+    let measurements = read_data_lines::<u32>(args.input)?;
     println!("Answer Part 1 = {}", count_window_increase(&measurements, 1));
     println!("Answer Part 2 = {}", count_window_increase(&measurements, 3));
     Ok(())
@@ -47,15 +46,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 mod tests {
     use super::*;
 
-    fn get_data(filename: &str) -> Vec<i32> {
+    fn get_data(filename: &str) -> Vec<u32> {
         let file = Some(std::path::PathBuf::from(filename));
-        read_data_lines::<i32>(file).unwrap()
+        read_data_lines::<u32>(file).unwrap()
     }
 
     #[test]
     #[should_panic]
     fn empty_array() {
-        let measurements = vec![];
+        let measurements = Vec::<i32>::new();
         let window = 1;
         count_window_increase(&measurements, window);
     }

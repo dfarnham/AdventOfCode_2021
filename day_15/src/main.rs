@@ -11,7 +11,7 @@ fn get_grid(data: &[String]) -> Array2<u32> {
     let get_row = |s: &str| {
         s.chars()
             .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>()
+            .collect::<Vec<_>>()
     };
 
     // use data[0] to size the new Array2
@@ -29,7 +29,7 @@ fn get_grid(data: &[String]) -> Array2<u32> {
 fn extend_row_right(row: &[u32]) -> Vec<u32> {
     let mut erow = row.to_vec();
     for i in 0..4 {
-        erow.extend(row.iter().map(|n| (*n + i) % 9 + 1).collect::<Vec<u32>>());
+        erow.extend(row.iter().map(|n| (*n + i) % 9 + 1).collect::<Vec<_>>());
     }
     erow
 }
@@ -39,7 +39,7 @@ fn get_grid_x5(data: &[String]) -> Array2<u32> {
     let get_row = |s: &str| {
         s.chars()
             .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>()
+            .collect::<Vec<_>>()
     };
 
     // use data[0] to size the new Array2
@@ -53,7 +53,7 @@ fn get_grid_x5(data: &[String]) -> Array2<u32> {
             .unwrap();
     }
     for i in 1..5 {
-        for line in &data[..] {
+        for line in data {
             let mut row = extend_row_right(&get_row(line));
             for _ in 0..i {
                 row = row.iter().map(|n| *n % 9 + 1).collect();

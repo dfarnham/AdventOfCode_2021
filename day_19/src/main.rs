@@ -109,7 +109,7 @@ fn get_data(data: &[String]) -> Vec<Scanner> {
         let coords = line
             .split(',')
             .map(|s| s.trim().parse::<i64>().unwrap())
-            .collect::<Vec<i64>>();
+            .collect::<Vec<_>>();
         assert_eq!(coords.len(), 3);
         beacons.push((coords[0], coords[1], coords[2]));
     }

@@ -9,7 +9,7 @@ const PUZZLE_ABOUT: &str = "Dive!: https://adventofcode.com/2021/day/2";
 // Given an input file containing key/value pairs separated by whitespace
 // Return a map of summed values for each key and a "depth" calculation
 fn get_move_data(filename: Option<PathBuf>) -> Result<HashMap<String, i32>, Box<dyn std::error::Error>> {
-    let mut move_data: HashMap<String, i32> = HashMap::new();
+    let mut move_data = HashMap::new();
     let mut aim = 0;
     let mut depth = 0;
 

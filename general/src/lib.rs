@@ -39,3 +39,15 @@ where
         }
     }
 }
+
+// splits the input on a separator and returns a Vec of the supplied type
+pub fn split_on<T>(input: &str, sep: char) -> Result<Vec<T>, Box<dyn std::error::Error>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: std::error::Error,
+{
+    Ok(input
+        .split(sep)
+        .map(|s| s.trim().parse::<T>().unwrap())
+        .collect::<Vec<T>>())
+}

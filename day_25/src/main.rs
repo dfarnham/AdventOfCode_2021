@@ -21,7 +21,7 @@ fn get_image(data: &[String]) -> Array2<Cell> {
                 'v' => Cell::South,
                 _ => Cell::Empty,
             })
-            .collect::<Vec<Cell>>()
+            .collect::<Vec<_>>()
     };
 
     // use data[0] to size the new Array2

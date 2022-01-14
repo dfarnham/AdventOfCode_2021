@@ -1,6 +1,5 @@
 use counter::Counter;
-use general::read_data_lines;
-use std::str::FromStr;
+use general::{read_data_lines, split_on};
 use structopt::StructOpt;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 7 -- Version:";
@@ -58,17 +57,6 @@ fn get_solution1(data: &[u32]) -> (usize, u32) {
     (cost, left_ptr)
 }
 
-fn get_datapoints<T>(data: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
-where
-    T: FromStr,
-    <T as FromStr>::Err: std::error::Error,
-{
-    Ok(data
-        .split(',')
-        .map(|s| s.trim().parse::<T>().unwrap())
-        .collect::<Vec<T>>())
-}
-
 #[allow(unused_variables)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[derive(StructOpt)]
@@ -87,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ==============================================================
 
     let data = read_data_lines::<String>(args.input)?;
-    let data = get_datapoints::<u32>(&data[0])?;
+    let data = split_on::<u32>(&data[0], ',')?;
 
     let (fuel_consumption, position) = get_solution1(&data);
     //println!("Position = {}", position);
@@ -107,7 +95,7 @@ mod tests {
         let file = Some(std::path::PathBuf::from(filename));
         let data = read_data_lines::<String>(file).unwrap();
         let line = &data[0];
-        get_datapoints::<u32>(line).unwrap()
+        split_on::<u32>(line, ',').unwrap()
     }
 
     #[test]

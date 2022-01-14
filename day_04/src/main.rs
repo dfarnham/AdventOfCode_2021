@@ -62,7 +62,7 @@ fn get_boards(data: &[String]) -> (Vec<u32>, Vec<Array2<u32>>) {
     let random_draw = data[0]
         .split(',')
         .map(|s| s.trim().parse::<u32>().unwrap())
-        .collect::<Vec<u32>>();
+        .collect::<Vec<_>>();
 
     // read all the 5x5 boards into an array
     let mut boards = vec![];
@@ -75,7 +75,7 @@ fn get_boards(data: &[String]) -> (Vec<u32>, Vec<Array2<u32>>) {
         let row = line
             .split_whitespace()
             .map(|s| s.trim().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>();
+            .collect::<Vec<_>>();
         board.push_row(ArrayView::from(&row)).unwrap();
     }
     if !board.is_empty() {

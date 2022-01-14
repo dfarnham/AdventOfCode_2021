@@ -6,14 +6,14 @@ const PUZZLE_NAME: &str = "Advent of Code: Day 5 -- Version:";
 const PUZZLE_ABOUT: &str = "Hydrothermal Venture: https://adventofcode.com/2021/day/5";
 
 #[derive(Copy, Clone, Debug)]
-struct Point {
-    x: u32,
-    y: u32,
+struct Point<T> {
+    x: T,
+    y: T,
 }
 #[derive(Copy, Clone, Debug)]
 struct LineSegment {
-    p1: Point,
-    p2: Point,
+    p1: Point<u32>,
+    p2: Point<u32>,
 }
 
 fn get_line_segments(data: &[String]) -> Vec<LineSegment> {
@@ -23,7 +23,7 @@ fn get_line_segments(data: &[String]) -> Vec<LineSegment> {
             .replace("->", ",")
             .split(',')
             .map(|s| s.trim().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>();
+            .collect::<Vec<_>>();
         line_segments.push(LineSegment {
             p1: Point {
                 x: coordinates[0],
@@ -57,7 +57,7 @@ fn get_horizontal(segments: &[LineSegment]) -> Vec<LineSegment> {
         .iter()
         .filter(|seg| seg.p1.y == seg.p2.y)
         .copied()
-        .collect::<Vec<LineSegment>>()
+        .collect::<Vec<_>>()
 }
 
 fn get_vertical(segments: &[LineSegment]) -> Vec<LineSegment> {
@@ -65,7 +65,7 @@ fn get_vertical(segments: &[LineSegment]) -> Vec<LineSegment> {
         .iter()
         .filter(|seg| seg.p1.x == seg.p2.x)
         .copied()
-        .collect::<Vec<LineSegment>>()
+        .collect::<Vec<_>>()
 }
 
 fn get_diagonal(segments: &[LineSegment]) -> Vec<LineSegment> {
@@ -73,17 +73,17 @@ fn get_diagonal(segments: &[LineSegment]) -> Vec<LineSegment> {
         .iter()
         .filter(|seg| seg.p1.x != seg.p2.x && seg.p1.y != seg.p2.y)
         .copied()
-        .collect::<Vec<LineSegment>>()
+        .collect::<Vec<_>>()
 }
 
 fn update_grid_horiz_vert_count(segments: &[LineSegment], grid: &mut Array2<u32>) -> usize {
     for seg in get_horizontal(segments).iter() {
-        for x in (seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x)).into_iter() {
+        for x in seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x) {
             grid[[x as usize, seg.p1.y as usize]] += 1;
         }
     }
     for seg in get_vertical(segments).iter() {
-        for y in (seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y)).into_iter() {
+        for y in seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y) {
             grid[[seg.p1.x as usize, y as usize]] += 1;
         }
     }

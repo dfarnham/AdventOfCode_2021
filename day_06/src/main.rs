@@ -1,6 +1,5 @@
 use counter::Counter;
-use general::read_data_lines;
-use std::str::FromStr;
+use general::{read_data_lines, split_on};
 use structopt::StructOpt;
 
 const PUZZLE_NAME: &str = "Advent of Code: Day 6 -- Version:";
@@ -24,18 +23,7 @@ fn cycle(data: &[u8], days: u32) -> usize {
             state[0],
         ];
     }
-    state.iter().sum::<usize>()
-}
-
-fn get_data<T>(data: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
-where
-    T: FromStr,
-    <T as FromStr>::Err: std::error::Error,
-{
-    Ok(data
-        .split(',')
-        .map(|s| s.trim().parse::<T>().unwrap())
-        .collect::<Vec<T>>())
+    state.iter().sum::<_>()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ==============================================================
 
     let data = read_data_lines::<String>(args.input)?;
-    let data = get_data::<u8>(&data[0])?;
+    let data = split_on::<u8>(&data[0], ',')?;
 
     println!("Answer Part 1 = {}", cycle(&data, 80));
     println!("Answer Part 2 = {}", cycle(&data, 256));
@@ -69,7 +57,7 @@ mod tests {
     fn get_filedata(filename: &str) -> Vec<u8> {
         let file = Some(std::path::PathBuf::from(filename));
         let data = read_data_lines::<String>(file).unwrap();
-        get_data::<u8>(&data[0]).unwrap()
+        split_on::<u8>(&data[0], ',').unwrap()
     }
 
     #[test]

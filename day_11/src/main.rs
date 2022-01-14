@@ -82,7 +82,7 @@ fn get_energy_levels(data: &[String]) -> Array2<u32> {
     let get_row = |s: &str| {
         s.chars()
             .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<u32>>()
+            .collect::<Vec<_>>()
     };
 
     // use data[0] to size the new Array2

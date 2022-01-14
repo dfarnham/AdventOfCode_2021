@@ -9,7 +9,7 @@ const PUZZLE_ABOUT: &str = "Extended Polymerization: https://adventofcode.com/20
 fn get_data(data: &[String]) -> (String, HashMap<String, String>) {
     let mut productions = HashMap::new();
     for line in data[1..].iter().filter(|s| !s.is_empty()) {
-        let pairs = line.split("->").map(|s| s.trim().to_string()).collect::<Vec<String>>();
+        let pairs = line.split("->").map(|s| s.trim().to_string()).collect::<Vec<_>>();
         productions.insert(pairs[0].to_string(), pairs[1].to_string());
     }
     (data[0].to_string(), productions)
@@ -54,7 +54,7 @@ fn solution(start: &str, productions: &HashMap<String, String>, steps: usize) ->
     let mut cntr = start.chars().into_iter().map(|c| c.to_string()).collect::<Counter<_>>();
 
     // initialize a "pair => Counter" memoize cache
-    let mut cache = HashMap::<String, Counter<String, usize>>::new();
+    let mut cache = HashMap::new();
 
     for pair in offset_slices(start, 2) {
         pair_counts(pair, productions, &mut cntr, &mut cache, steps);

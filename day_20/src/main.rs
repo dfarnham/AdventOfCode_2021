@@ -6,7 +6,7 @@ const PUZZLE_NAME: &str = "Advent of Code: Day 20 -- Version:";
 const PUZZLE_ABOUT: &str = "Trench Map: https://adventofcode.com/2021/day/20";
 
 fn get_data(data: &[String]) -> (Vec<bool>, Array2<bool>) {
-    let algorithm = data[0].chars().map(|c| c == '#').collect::<Vec<bool>>();
+    let algorithm = data[0].chars().map(|c| c == '#').collect::<Vec<_>>();
     assert_eq!(algorithm.len(), 512);
     let image = get_image(&data[2..]);
     (algorithm, image)
@@ -14,7 +14,7 @@ fn get_data(data: &[String]) -> (Vec<bool>, Array2<bool>) {
 
 fn get_image(data: &[String]) -> Array2<bool> {
     // row parsing rules for data[String]
-    let get_row = |s: &str| s.chars().map(|c| c == '#').collect::<Vec<bool>>();
+    let get_row = |s: &str| s.chars().map(|c| c == '#').collect::<Vec<_>>();
 
     // use data[0] to size the new Array2
     let row = get_row(&data[0]);

@@ -27,13 +27,13 @@ fn get_graph(data: &[String]) -> BTreeMap<String, HashSet<String>> {
 
     let mut graph = BTreeMap::new();
     for s in data.iter() {
-        let nodes = s.trim().split('-').map(|s| s.to_string()).collect::<Vec<String>>();
+        let nodes = s.trim().split('-').map(|s| s.to_string()).collect::<Vec<_>>();
         assert_eq!(nodes.len(), 2, "expected 2 nodes: {:?}", nodes);
         let (a, b) = (nodes[0].clone(), nodes[1].clone());
-        let h = graph.entry(a.clone()).or_insert_with(HashSet::<String>::new);
+        let h = graph.entry(a.clone()).or_insert_with(HashSet::new);
         h.insert(b.clone());
         if a != "start" && b != "end" {
-            let h = graph.entry(b).or_insert_with(HashSet::<String>::new);
+            let h = graph.entry(b).or_insert_with(HashSet::new);
             h.insert(a);
         }
     }
@@ -85,9 +85,9 @@ fn visit(
 }
 
 fn solution(graph: &BTreeMap<String, HashSet<String>>, count: usize) -> usize {
-    let mut visited = BTreeMap::<String, usize>::new();
     let mut paths = vec![];
-    let mut solutions = HashSet::<Vec<String>>::new();
+    let mut visited = BTreeMap::new();
+    let mut solutions = HashSet::new();
     if count == 1 {
         visit(graph, "start", "end", count, &mut visited, &mut paths, &mut solutions);
     } else {

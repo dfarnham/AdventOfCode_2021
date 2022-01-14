@@ -27,7 +27,7 @@ fn expr(alu: &ALU, e: &str) -> i64 {
 
 fn compute(alu: &mut ALU, instructions: &[String]) {
     for line in instructions {
-        let fields = line.split_whitespace().collect::<Vec<&str>>();
+        let fields = line.split_whitespace().collect::<Vec<_>>();
         let expr_value = match fields[0] {
             "inp" => {
                 alu.index += 1;

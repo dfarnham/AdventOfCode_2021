@@ -41,7 +41,7 @@ fn solution2(start_pos1: u64, start_pos2: u64) -> u64 {
     for i in [1, 2, 3] {
         for j in [1, 2, 3] {
             for k in [1, 2, 3] {
-                roll_sums.push([i, j, k].iter().sum::<u64>());
+                roll_sums.push([i, j, k].iter().sum::<_>());
             }
         }
     }

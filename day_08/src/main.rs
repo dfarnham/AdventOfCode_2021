@@ -101,8 +101,8 @@ fn get_solution(garbled: &[String]) -> Vec<u8> {
 fn get_segment_msg(data: &str) -> Vec<String> {
     data.split_whitespace()
         .filter(|s| *s != "|")
-        .map(|s| s.trim().chars().sorted().collect::<String>())
-        .collect::<Vec<String>>()
+        .map(|s| s.trim().chars().sorted().collect::<_>())
+        .collect::<Vec<_>>()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let digits = data
         .iter()
         .map(|line| get_segment_msg(line))
-        .collect::<Vec<Vec<String>>>();
+        .collect::<Vec<Vec<_>>>();
 
     let mut digit_counts = Counter::<u8, usize>::new();
     let mut n = 0;
@@ -155,7 +155,7 @@ mod tests {
         let data = read_data_lines::<String>(file).unwrap();
         data.iter()
             .map(|line| get_segment_msg(line))
-            .collect::<Vec<Vec<String>>>()
+            .collect::<Vec<Vec<_>>>()
     }
 
     #[test]
