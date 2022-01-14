@@ -21,8 +21,10 @@ do
     echo "========== INPUT FILES =========="
     for day in day*
     do
-        echo cargo run --bin "$day" --release -- -i "$day/$input"
-        cargo run --bin "$day" --release -- -i "$day/$input"
-        echo "--------------------"
+        if [ -f "$day/$input" ]; then
+            echo cargo run --bin "$day" --release -- -i "$day/$input"
+            cargo run --bin "$day" --release -- -i "$day/$input"
+            echo "--------------------"
+        fi
     done
 done
