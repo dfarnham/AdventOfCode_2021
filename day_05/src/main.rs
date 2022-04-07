@@ -77,12 +77,12 @@ fn get_diagonal(segments: &[LineSegment]) -> Vec<LineSegment> {
 }
 
 fn update_grid_horiz_vert_count(segments: &[LineSegment], grid: &mut Array2<u32>) -> usize {
-    for seg in get_horizontal(segments).iter() {
+    for seg in get_horizontal(segments) {
         for x in seg.p1.x.min(seg.p2.x)..=seg.p1.x.max(seg.p2.x) {
             grid[[x as usize, seg.p1.y as usize]] += 1;
         }
     }
-    for seg in get_vertical(segments).iter() {
+    for seg in get_vertical(segments) {
         for y in seg.p1.y.min(seg.p2.y)..=seg.p1.y.max(seg.p2.y) {
             grid[[seg.p1.x as usize, y as usize]] += 1;
         }
@@ -91,7 +91,7 @@ fn update_grid_horiz_vert_count(segments: &[LineSegment], grid: &mut Array2<u32>
 }
 
 fn update_grid_diag_count(segments: &[LineSegment], grid: &mut Array2<u32>) -> usize {
-    for seg in get_diagonal(segments).iter() {
+    for seg in get_diagonal(segments) {
         let mut x = seg.p1.x;
         let mut y = seg.p1.y;
 

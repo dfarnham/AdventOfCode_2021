@@ -35,7 +35,7 @@ impl Scanner {
 impl Scanner {
     fn rotate(&self, rotation_index: usize) -> Self {
         let mut beacons = vec![];
-        for (x, y, z) in self.beacons.iter() {
+        for (x, y, z) in &self.beacons {
             let (x, y, z) = (*x, *y, *z);
             let rotated_beacon = match rotation_index {
                 0 => (x, y, z),

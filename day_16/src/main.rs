@@ -278,7 +278,7 @@ fn eval(packets: &[Packet]) -> Vec<u64> {
 
 fn solution1(packets: &[Packet]) -> u64 {
     let mut total = 0;
-    for p in packets.iter() {
+    for p in packets {
         total += p.version as u64;
         if let Some(sp) = &p.sub_packets {
             total += solution1(sp);

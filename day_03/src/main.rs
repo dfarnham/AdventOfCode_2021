@@ -16,8 +16,8 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
 
     let nbits = nbits(data);
     let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<_>>();
-    for mask in masks.iter() {
-        let count = data.par_iter().filter(|n| (*n & mask) == *mask).count();
+    for mask in masks {
+        let count = data.par_iter().filter(|n| (*n & mask) == mask).count();
         // are there more bits "on" than "off" in this position?
         match 2 * count >= data.len() {
             true => gamma |= mask,
@@ -32,7 +32,7 @@ where T: std::cmp::PartialEq + Copy + std::ops::BitAnd<Output = T>
 {
     let mut masked = vec![];
     let mut unmasked = vec![];
-    for n in data.iter() {
+    for n in data {
         match (*n & mask) == mask {
             true => masked.push(*n),
             false => unmasked.push(*n),

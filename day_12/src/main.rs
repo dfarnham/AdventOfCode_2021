@@ -26,7 +26,7 @@ fn get_graph(data: &[String]) -> BTreeMap<String, HashSet<String>> {
     //   }
 
     let mut graph = BTreeMap::new();
-    for s in data.iter() {
+    for s in data {
         let nodes = s.trim().split('-').map(|s| s.to_string()).collect::<Vec<_>>();
         assert_eq!(nodes.len(), 2, "expected 2 nodes: {:?}", nodes);
         let (a, b) = (nodes[0].clone(), nodes[1].clone());

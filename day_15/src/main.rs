@@ -115,7 +115,7 @@ fn solution(grid: &Array2<u32>, start: (usize, usize), finish: (usize, usize)) -
         }
         edge.push((i, i));
 
-        for pt in edge.into_iter() {
+        for pt in edge {
             let mut best_score = u32::MAX;
             let score = risk[[pt.0, pt.1]];
             calc_risk(pt, &scored, 0, score, &mut best_score, &risk);

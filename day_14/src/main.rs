@@ -34,7 +34,7 @@ fn pair_counts(
                 let right_pair = rule.to_owned() + &pair[1..2];
                 let key = format!("{}:{}:{}", step, left_pair, right_pair);
                 if let Some(saved_cntr) = cache.get(&key) {
-                    for (k, v) in saved_cntr.iter() {
+                    for (k, v) in saved_cntr {
                         cntr[k] += *v;
                     }
                 } else {

@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 general = { path = "../general" }
-regex = "1.5.4"
-structopt = "0.3.25"
+regex = "1.5.5"
+structopt = "0.3.26"

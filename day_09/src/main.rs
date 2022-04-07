@@ -86,9 +86,9 @@ fn get_solution1(heatmap: &Array2<u32>) -> u32 {
 fn get_solution2(heatmap: &Array2<u32>) -> u32 {
     let mut basin_sizes = vec![];
 
-    for point in get_lowpoints(heatmap).iter() {
+    for point in get_lowpoints(heatmap) {
         let mut basin = BTreeSet::<(usize, usize)>::new();
-        find_basin(heatmap, point, &mut basin);
+        find_basin(heatmap, &point, &mut basin);
         basin_sizes.push(basin.len());
     }
 
