@@ -17,12 +17,10 @@ fn get_image(data: &[String]) -> Array2<bool> {
     let get_row = |s: &str| s.chars().map(|c| c == '#').collect::<Vec<_>>();
 
     // use data[0] to size the new Array2
-    let row = get_row(&data[0]);
-    let mut grid = Array::from_elem((0, row.len()), false);
-    grid.push_row(ArrayView::from(&row)).unwrap();
+    let mut grid = Array::from_elem((0, data[0].len()), false);
 
-    // process remaining data[1..]
-    for line in &data[1..] {
+    // process data[..]
+    for line in data {
         grid.push_row(ArrayView::from(&get_row(line))).unwrap();
     }
     grid

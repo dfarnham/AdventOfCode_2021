@@ -86,12 +86,10 @@ fn get_energy_levels(data: &[String]) -> Array2<u32> {
     };
 
     // use data[0] to size the new Array2
-    let row = get_row(&data[0]);
-    let mut energy_levels = Array::zeros((0, row.len()));
-    energy_levels.push_row(ArrayView::from(&row)).unwrap();
+    let mut energy_levels = Array::zeros((0, data[0].len()));
 
-    // process remaining data[1..]
-    for line in &data[1..] {
+    // process data[..]
+    for line in data {
         energy_levels.push_row(ArrayView::from(&get_row(line))).unwrap();
     }
     energy_levels

@@ -25,14 +25,10 @@ fn get_image(data: &[String]) -> Array2<Cell> {
     };
 
     // use data[0] to size the new Array2
-    let row = get_row(&data[0]);
-    let mut grid = Array::from_elem((0, row.len()), Cell::Empty);
+    let mut grid = Array::from_elem((0, data[0].len()), Cell::Empty);
 
-    // push the 1st row
-    grid.push_row(ArrayView::from(&row)).unwrap();
-
-    // process remaining data[1..]
-    for line in &data[1..] {
+    // process data[..]
+    for line in data {
         grid.push_row(ArrayView::from(&get_row(line))).unwrap();
     }
     grid
